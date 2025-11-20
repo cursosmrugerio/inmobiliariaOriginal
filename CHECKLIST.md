@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 0/62 issues completados**
+**Total: 6/62 issues completados**
 
 ---
 
@@ -15,14 +15,14 @@
 
 ---
 
-## Milestone 2: Catálogos Base (0/6)
+## Milestone 2: Catálogos Base (6/6)
 
-- [ ] #6 - Implementar catálogo de Estados (CAT_ESTADOS)
-- [ ] #7 - Implementar catálogo de Municipios (CAT_MUNICIPIOS)
-- [ ] #8 - Implementar catálogo de Colonias (CAT_COLONIAS)
-- [ ] #9 - Implementar catálogo de Códigos Postales
-- [ ] #10 - Implementar catálogo de Tipos de Asentamiento
-- [ ] #11 - Implementar catálogo de Roles (CAT_ROLES)
+- [x] #6 - Implementar catálogo de Estados (CAT_ESTADOS)
+- [x] #7 - Implementar catálogo de Municipios (CAT_MUNICIPIOS)
+- [x] #8 - Implementar catálogo de Colonias (CAT_COLONIAS)
+- [x] #9 - Implementar catálogo de Códigos Postales
+- [x] #10 - Implementar catálogo de Tipos de Asentamiento
+- [x] #11 - Implementar catálogo de Roles (CAT_ROLES)
 
 ---
 
