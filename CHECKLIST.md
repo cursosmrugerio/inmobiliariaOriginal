@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 6/62 issues completados**
+**Total: 9/62 issues completados**
 
 ---
 
@@ -26,11 +26,11 @@
 
 ---
 
-## Milestone 3: Módulo Empresa (0/3)
+## Milestone 3: Módulo Empresa (3/3)
 
-- [ ] #12 - CRUD de Empresas/Inmobiliarias
-- [ ] #13 - Configuración de tenant context
-- [ ] #14 - Frontend: Selector de empresa y dashboard
+- [x] #12 - CRUD de Empresas/Inmobiliarias
+- [x] #13 - Configuración de tenant context
+- [x] #14 - Frontend: Selector de empresa y dashboard
 
 ---
 
