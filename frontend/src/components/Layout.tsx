@@ -21,6 +21,7 @@ import {
   AccountCircle,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import EmpresaSelector from './EmpresaSelector';
 
 const drawerWidth = 240;
 
@@ -85,6 +86,9 @@ export default function Layout() {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Sistema Inmobiliario
           </Typography>
+          <Box sx={{ mr: 2 }}>
+            <EmpresaSelector />
+          </Box>
           <div>
             <IconButton color="inherit" onClick={handleMenu}>
               <AccountCircle />
