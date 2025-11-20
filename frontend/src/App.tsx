@@ -6,6 +6,9 @@ import Layout from './components/Layout';
 import PersonasList from './pages/personas/PersonasList';
 import PersonaForm from './pages/personas/PersonaForm';
 import PersonaDetail from './pages/personas/PersonaDetail';
+import PropiedadesList from './pages/propiedades/PropiedadesList';
+import PropiedadForm from './pages/propiedades/PropiedadForm';
+import PropiedadDetail from './pages/propiedades/PropiedadDetail';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -28,6 +31,10 @@ function App() {
         <Route path="personas/new" element={<PersonaForm />} />
         <Route path="personas/:id" element={<PersonaDetail />} />
         <Route path="personas/:id/edit" element={<PersonaForm />} />
+        <Route path="propiedades" element={<PropiedadesList />} />
+        <Route path="propiedades/new" element={<PropiedadForm />} />
+        <Route path="propiedades/:id" element={<PropiedadDetail />} />
+        <Route path="propiedades/:id/edit" element={<PropiedadForm />} />
       </Route>
     </Routes>
   );
