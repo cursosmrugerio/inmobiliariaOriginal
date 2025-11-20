@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 9/62 issues completados**
+**Total: 14/62 issues completados**
 
 ---
 
@@ -34,13 +34,13 @@
 
 ---
 
-## Milestone 4: Módulo Personas (0/5)
+## Milestone 4: Módulo Personas (5/5)
 
-- [ ] #15 - CRUD de Personas (física/moral)
-- [ ] #16 - Gestión de roles por persona (PERSONA_ROL)
-- [ ] #17 - CRUD de Direcciones
-- [ ] #18 - CRUD de Cuentas Bancarias
-- [ ] #19 - Frontend: Listado y formularios de personas
+- [x] #15 - CRUD de Personas (física/moral)
+- [x] #16 - Gestión de roles por persona (PERSONA_ROL)
+- [x] #17 - CRUD de Direcciones
+- [x] #18 - CRUD de Cuentas Bancarias
+- [x] #19 - Frontend: Listado y formularios de personas
 
 ---
 
