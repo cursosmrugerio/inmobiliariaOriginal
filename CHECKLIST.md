@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 14/62 issues completados**
+**Total: 18/62 issues completados**
 
 ---
 
@@ -44,12 +44,12 @@
 
 ---
 
-## Milestone 5: Módulo Propiedades (0/4)
+## Milestone 5: Módulo Propiedades (4/4)
 
-- [ ] #20 - CRUD de Propiedades
-- [ ] #21 - Catálogo de Tipos de Propiedad
-- [ ] #22 - Asociación propiedad-propietario
-- [ ] #23 - Frontend: Listado y formularios de propiedades
+- [x] #20 - CRUD de Propiedades
+- [x] #21 - Catálogo de Tipos de Propiedad
+- [x] #22 - Asociación propiedad-propietario
+- [x] #23 - Frontend: Listado y formularios de propiedades
 
 ---
 
