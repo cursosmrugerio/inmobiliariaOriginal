@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 37/62 issues completados**
+**Total: 42/62 issues completados**
 
 ---
 
@@ -53,13 +53,13 @@
 
 ---
 
-## Milestone 6: Módulo Contratos (0/5)
+## Milestone 6: Módulo Contratos (5/5)
 
-- [ ] #24 - CRUD de Contratos de Arrendamiento
-- [ ] #25 - Asociación contrato-propiedad-arrendatario-aval
-- [ ] #26 - Control de vencimientos de contratos
-- [ ] #27 - Renovación y terminación de contratos
-- [ ] #28 - Frontend: Gestión de contratos
+- [x] #24 - CRUD de Contratos de Arrendamiento
+- [x] #25 - Asociación contrato-propiedad-arrendatario-aval
+- [x] #26 - Control de vencimientos de contratos
+- [x] #27 - Renovación y terminación de contratos
+- [x] #28 - Frontend: Gestión de contratos
 
 ---
 
