@@ -1,6 +1,6 @@
 package com.inmobiliaria.pago;
 
-import com.inmobiliaria.shared.TenantAware;
+import com.inmobiliaria.shared.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import lombok.*;
 

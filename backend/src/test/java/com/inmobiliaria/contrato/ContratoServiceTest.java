@@ -5,7 +5,7 @@ import com.inmobiliaria.persona.PersonaRepository;
 import com.inmobiliaria.persona.TipoPersona;
 import com.inmobiliaria.propiedad.Propiedad;
 import com.inmobiliaria.propiedad.PropiedadRepository;
-import com.inmobiliaria.propiedad.TipoPropiedad;
+import com.inmobiliaria.catalogo.TipoPropiedad;
 import com.inmobiliaria.contrato.dto.ContratoDTO;
 import com.inmobiliaria.contrato.dto.CreateContratoRequest;
 import com.inmobiliaria.shared.multitenancy.TenantContext;

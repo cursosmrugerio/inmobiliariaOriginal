@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 59/62 issues completados (95%)**
+**Total: 62/62 issues completados (100%)**
 
 ---
 
@@ -129,11 +129,11 @@
 
 ---
 
-## Milestone 14: Deployment (0/3)
+## Milestone 14: Deployment (3/3)
 
-- [ ] #60 - Configurar CI/CD con GitHub Actions
-- [ ] #61 - Configurar deployment a Cloud Run
-- [ ] #62 - Documentación de deployment
+- [x] #60 - Configurar CI/CD con GitHub Actions
+- [x] #61 - Configurar deployment a Cloud Run
+- [x] #62 - Documentación de deployment
 
 ---
 

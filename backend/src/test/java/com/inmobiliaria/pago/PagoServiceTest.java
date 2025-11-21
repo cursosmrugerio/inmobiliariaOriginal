@@ -10,7 +10,7 @@ import com.inmobiliaria.pago.dto.PagoDTO;
 import com.inmobiliaria.persona.Persona;
 import com.inmobiliaria.persona.TipoPersona;
 import com.inmobiliaria.propiedad.Propiedad;
-import com.inmobiliaria.propiedad.TipoPropiedad;
+import com.inmobiliaria.catalogo.TipoPropiedad;
 import com.inmobiliaria.shared.multitenancy.TenantContext;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
