@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 42/62 issues completados**
+**Total: 47/62 issues completados**
 
 ---
 
@@ -63,13 +63,13 @@
 
 ---
 
-## Milestone 7: Módulo Pagos (0/5)
+## Milestone 7: Módulo Pagos (5/5)
 
-- [ ] #29 - CRUD de Pagos
-- [ ] #30 - Tipos de pago (transferencia, efectivo, cheque)
-- [ ] #31 - Generación automática de cargos fijos
-- [ ] #32 - Registro de cargos variables
-- [ ] #33 - Frontend: Registro y consulta de pagos
+- [x] #29 - CRUD de Pagos
+- [x] #30 - Tipos de pago (transferencia, efectivo, cheque)
+- [x] #31 - Generación automática de cargos fijos
+- [x] #32 - Registro de cargos variables
+- [x] #33 - Frontend: Registro y consulta de pagos
 
 ---
 
