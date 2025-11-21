@@ -12,6 +12,7 @@ import PropiedadDetail from './pages/propiedades/PropiedadDetail';
 import ContratosList from './pages/contratos/ContratosList';
 import ContratoForm from './pages/contratos/ContratoForm';
 import ContratoDetail from './pages/contratos/ContratoDetail';
+import { PagosList, PagoForm, PagoDetail, CargosList, CargoForm } from './pages/pagos';
 import ReportesPage from './pages/reportes/ReportesPage';
 import { NotificacionesDashboard } from './pages/notificaciones';
 
@@ -44,6 +45,11 @@ function App() {
         <Route path="contratos/new" element={<ContratoForm />} />
         <Route path="contratos/:id" element={<ContratoDetail />} />
         <Route path="contratos/:id/edit" element={<ContratoForm />} />
+        <Route path="pagos" element={<PagosList />} />
+        <Route path="pagos/nuevo" element={<PagoForm />} />
+        <Route path="pagos/:id" element={<PagoDetail />} />
+        <Route path="pagos/cargos" element={<CargosList />} />
+        <Route path="pagos/cargos/nuevo" element={<CargoForm />} />
         <Route path="reportes" element={<ReportesPage />} />
         <Route path="notificaciones" element={<NotificacionesDashboard />} />
       </Route>
