@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 52/62 issues completados (84%)**
+**Total: 55/62 issues completados (89%)**
 
 ---
 
@@ -112,11 +112,11 @@
 
 ---
 
-## Milestone 12: Mantenimiento (0/3)
+## Milestone 12: Mantenimiento (3/3)
 
-- [ ] #53 - CRUD de Proveedores
-- [ ] #54 - CRUD de Órdenes de Mantenimiento
-- [ ] #55 - Seguimiento de solicitudes de mantenimiento
+- [x] #53 - CRUD de Proveedores
+- [x] #54 - CRUD de Órdenes de Mantenimiento
+- [x] #55 - Seguimiento de solicitudes de mantenimiento
 
 ---
 
