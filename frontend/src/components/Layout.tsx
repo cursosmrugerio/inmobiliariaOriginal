@@ -20,6 +20,8 @@ import {
   Dashboard as DashboardIcon,
   AccountCircle,
   People as PeopleIcon,
+  Home as HomeIcon,
+  Assessment as ReportIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import EmpresaSelector from './EmpresaSelector';
@@ -71,6 +73,22 @@ export default function Layout() {
               <PeopleIcon />
             </ListItemIcon>
             <ListItemText primary="Personas" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/propiedades')}>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Propiedades" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/reportes')}>
+            <ListItemIcon>
+              <ReportIcon />
+            </ListItemIcon>
+            <ListItemText primary="Reportes" />
           </ListItemButton>
         </ListItem>
       </List>
