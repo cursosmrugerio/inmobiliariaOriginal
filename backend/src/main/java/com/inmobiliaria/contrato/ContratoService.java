@@ -197,9 +197,10 @@ public class ContratoService {
         }
 
         // Check if propiedad already has active contract
+        final Long contratoId = contrato.getId();
         contratoRepository.findContratoActivoByPropiedad(contrato.getPropiedad().getId())
                 .ifPresent(c -> {
-                    if (!c.getId().equals(contrato.getId())) {
+                    if (!c.getId().equals(contratoId)) {
                         throw new IllegalArgumentException("La propiedad ya tiene un contrato activo");
                     }
                 });

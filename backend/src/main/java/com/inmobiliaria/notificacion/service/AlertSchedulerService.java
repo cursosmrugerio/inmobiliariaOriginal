@@ -78,7 +78,7 @@ public class AlertSchedulerService {
         log.info("Procesando recordatorios de pago pendiente para empresa {}", config.getEmpresaId());
 
         try {
-            List<CarteraVencidaDTO> cartera = cobranzaService.getCarteraVencida();
+            List<CarteraVencidaDTO> cartera = cobranzaService.getAllCarteraVencida(false);
 
             for (CarteraVencidaDTO item : cartera) {
                 if (item.getDiasVencido() <= 0) {
@@ -96,7 +96,7 @@ public class AlertSchedulerService {
         log.info("Procesando alertas de pago vencido para empresa {}", config.getEmpresaId());
 
         try {
-            List<CarteraVencidaDTO> cartera = cobranzaService.getCarteraVencida();
+            List<CarteraVencidaDTO> cartera = cobranzaService.getAllCarteraVencida(false);
 
             for (CarteraVencidaDTO item : cartera) {
                 if (item.getDiasVencido() > 0) {
