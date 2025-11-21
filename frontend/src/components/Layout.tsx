@@ -23,6 +23,7 @@ import {
   Home as HomeIcon,
   Assessment as ReportIcon,
   Notifications as NotificationsIcon,
+  Folder as FolderIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import EmpresaSelector from './EmpresaSelector';
@@ -98,6 +99,14 @@ export default function Layout() {
               <NotificationsIcon />
             </ListItemIcon>
             <ListItemText primary="Notificaciones" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/documentos')}>
+            <ListItemIcon>
+              <FolderIcon />
+            </ListItemIcon>
+            <ListItemText primary="Documentos" />
           </ListItemButton>
         </ListItem>
       </List>

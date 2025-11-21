@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 34/62 issues completados**
+**Total: 37/62 issues completados**
 
 ---
 
@@ -104,11 +104,11 @@
 
 ---
 
-## Milestone 11: Documentos (0/3)
+## Milestone 11: Documentos (3/3)
 
-- [ ] #50 - CRUD de Documentos
-- [ ] #51 - Carga y almacenamiento de archivos
-- [ ] #52 - Asociación documentos con entidades
+- [x] #50 - CRUD de Documentos
+- [x] #51 - Carga y almacenamiento de archivos
+- [x] #52 - Asociación documentos con entidades
 
 ---
 

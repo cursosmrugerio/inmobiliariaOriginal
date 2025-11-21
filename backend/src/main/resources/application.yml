@@ -42,8 +42,10 @@ spring.mail:
           starttls:
             enable: true
 
-# Application notifications configuration
+# Application configuration
 app:
+  storage:
+    location: ${STORAGE_LOCATION:./uploads}
   notifications:
     email:
       enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
@@ -52,6 +54,11 @@ app:
       api-url: ${WHATSAPP_API_URL:https://graph.facebook.com/v17.0}
       api-token: ${WHATSAPP_API_TOKEN:}
       phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+
+# File upload configuration
+spring.servlet.multipart:
+  max-file-size: 10MB
+  max-request-size: 10MB
 
 # Logging
 logging:
