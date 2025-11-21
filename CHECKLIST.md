@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 18/62 issues completados**
+**Total: 23/62 issues completados**
 
 ---
 
@@ -73,13 +73,13 @@
 
 ---
 
-## Milestone 8: Control de Cobranza (0/5)
+## Milestone 8: Control de Cobranza (5/5)
 
-- [ ] #34 - Administración de cartera vencida
-- [ ] #35 - Cálculo de morosidad y penalidades
-- [ ] #36 - Proyección de cobranza
-- [ ] #37 - Seguimiento de cobranza
-- [ ] #38 - Frontend: Dashboard de cobranza
+- [x] #34 - Administración de cartera vencida
+- [x] #35 - Cálculo de morosidad y penalidades
+- [x] #36 - Proyección de cobranza
+- [x] #37 - Seguimiento de cobranza
+- [x] #38 - Frontend: Dashboard de cobranza
 
 ---
 
