@@ -1,17 +1,17 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 47/62 issues completados**
+**Total: 52/62 issues completados (84%)**
 
 ---
 
-## Milestone 1: Configuración Inicial (0/5)
+## Milestone 1: Configuración Inicial (5/5)
 
-- [ ] #1 - Configurar proyecto backend Spring Boot + Spring Modulith
-- [ ] #2 - Configurar proyecto frontend React + Vite + MUI
-- [ ] #3 - Configurar base de datos PostgreSQL
-- [ ] #4 - Implementar arquitectura multi-tenant con empresa_id
-- [ ] #5 - Configurar Spring Security con JWT
+- [x] #1 - Configurar proyecto backend Spring Boot + Spring Modulith
+- [x] #2 - Configurar proyecto frontend React + Vite + MUI
+- [x] #3 - Configurar base de datos PostgreSQL
+- [x] #4 - Implementar arquitectura multi-tenant con empresa_id
+- [x] #5 - Configurar Spring Security con JWT
 
 ---
 
@@ -155,4 +155,4 @@
 
 ---
 
-*Última actualización: Pendiente*
+*Última actualización: 2025-11-21*
