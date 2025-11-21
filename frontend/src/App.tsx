@@ -10,6 +10,7 @@ import PropiedadesList from './pages/propiedades/PropiedadesList';
 import PropiedadForm from './pages/propiedades/PropiedadForm';
 import PropiedadDetail from './pages/propiedades/PropiedadDetail';
 import ReportesPage from './pages/reportes/ReportesPage';
+import { NotificacionesDashboard } from './pages/notificaciones';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -37,6 +38,7 @@ function App() {
         <Route path="propiedades/:id" element={<PropiedadDetail />} />
         <Route path="propiedades/:id/edit" element={<PropiedadForm />} />
         <Route path="reportes" element={<ReportesPage />} />
+        <Route path="notificaciones" element={<NotificacionesDashboard />} />
       </Route>
     </Routes>
   );

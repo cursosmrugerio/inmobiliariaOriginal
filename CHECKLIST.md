@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 29/62 issues completados**
+**Total: 34/62 issues completados**
 
 ---
 
@@ -94,13 +94,13 @@
 
 ---
 
-## Milestone 10: Notificaciones (0/5)
+## Milestone 10: Notificaciones (5/5)
 
-- [ ] #45 - Servicio de notificaciones por email
-- [ ] #46 - Integración con WhatsApp
-- [ ] #47 - Alertas de vencimiento de contratos
-- [ ] #48 - Recordatorios de pagos pendientes
-- [ ] #49 - Configuración de anticipación de alertas
+- [x] #45 - Servicio de notificaciones por email
+- [x] #46 - Integración con WhatsApp
+- [x] #47 - Alertas de vencimiento de contratos
+- [x] #48 - Recordatorios de pagos pendientes
+- [x] #49 - Configuración de anticipación de alertas
 
 ---
 

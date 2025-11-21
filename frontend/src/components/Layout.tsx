@@ -22,6 +22,7 @@ import {
   People as PeopleIcon,
   Home as HomeIcon,
   Assessment as ReportIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import EmpresaSelector from './EmpresaSelector';
@@ -89,6 +90,14 @@ export default function Layout() {
               <ReportIcon />
             </ListItemIcon>
             <ListItemText primary="Reportes" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/notificaciones')}>
+            <ListItemIcon>
+              <NotificationsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Notificaciones" />
           </ListItemButton>
         </ListItem>
       </List>

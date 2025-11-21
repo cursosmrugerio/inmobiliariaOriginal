@@ -31,6 +31,8 @@ public class CarteraVencidaDTO {
 
     // Additional display fields
     private String nombrePersona;
+    private String emailPersona;
+    private String telefonoPersona;
     private String direccionPropiedad;
     private BigDecimal montoTotal;
 
