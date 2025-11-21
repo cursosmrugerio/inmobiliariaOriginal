@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 23/62 issues completados**
+**Total: 29/62 issues completados**
 
 ---
 
@@ -83,14 +83,14 @@
 
 ---
 
-## Milestone 9: Reportes (0/6)
+## Milestone 9: Reportes (6/6)
 
-- [ ] #39 - Estado de cuenta de clientes
-- [ ] #40 - Reporte de antigüedad de saldos
-- [ ] #41 - Reporte de cartera vencida
-- [ ] #42 - Reporte de proyección de cobranza
-- [ ] #43 - Exportación a Excel/CSV
-- [ ] #44 - Frontend: Módulo de reportes
+- [x] #39 - Estado de cuenta de clientes
+- [x] #40 - Reporte de antigüedad de saldos
+- [x] #41 - Reporte de cartera vencida
+- [x] #42 - Reporte de proyección de cobranza
+- [x] #43 - Exportación a Excel/CSV
+- [x] #44 - Frontend: Módulo de reportes
 
 ---
 
