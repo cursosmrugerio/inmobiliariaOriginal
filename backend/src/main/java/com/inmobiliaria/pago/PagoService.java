@@ -6,7 +6,7 @@ import com.inmobiliaria.contrato.EstadoContrato;
 import com.inmobiliaria.pago.dto.*;
 import com.inmobiliaria.persona.Persona;
 import com.inmobiliaria.persona.PersonaRepository;
-import com.inmobiliaria.shared.TenantContext;
+import com.inmobiliaria.shared.multitenancy.TenantContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -5,7 +5,7 @@ import com.inmobiliaria.cobranza.service.CobranzaService;
 import com.inmobiliaria.notificacion.domain.*;
 import com.inmobiliaria.notificacion.dto.CreateNotificacionRequest;
 import com.inmobiliaria.notificacion.repository.ConfiguracionNotificacionRepository;
-import com.inmobiliaria.shared.tenant.TenantContext;
+import com.inmobiliaria.shared.multitenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

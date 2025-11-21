@@ -3,7 +3,7 @@ package com.inmobiliaria.notificacion.service;
 import com.inmobiliaria.notificacion.domain.*;
 import com.inmobiliaria.notificacion.dto.*;
 import com.inmobiliaria.notificacion.repository.*;
-import com.inmobiliaria.shared.tenant.TenantContext;
+import com.inmobiliaria.shared.multitenancy.TenantContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

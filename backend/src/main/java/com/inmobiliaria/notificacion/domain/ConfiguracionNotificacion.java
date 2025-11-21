@@ -1,6 +1,6 @@
 package com.inmobiliaria.notificacion.domain;
 
-import com.inmobiliaria.shared.tenant.TenantAware;
+import com.inmobiliaria.shared.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import lombok.*;
 
