@@ -29,6 +29,30 @@ jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationThatIsLongEnough256Bits}
   expiration: 86400000  # 24 hours in milliseconds
 
+# Mail Configuration
+spring.mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Application notifications configuration
+app:
+  notifications:
+    email:
+      enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
+    whatsapp:
+      enabled: ${WHATSAPP_NOTIFICATIONS_ENABLED:false}
+      api-url: ${WHATSAPP_API_URL:https://graph.facebook.com/v17.0}
+      api-token: ${WHATSAPP_API_TOKEN:}
+      phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+
 # Logging
 logging:
   level:
