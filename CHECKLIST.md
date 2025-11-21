@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 55/62 issues completados (89%)**
+**Total: 59/62 issues completados (95%)**
 
 ---
 
@@ -120,12 +120,12 @@
 
 ---
 
-## Milestone 13: Testing y QA (0/4)
+## Milestone 13: Testing y QA (4/4)
 
-- [ ] #56 - Tests unitarios backend
-- [ ] #57 - Tests de integración con Testcontainers
-- [ ] #58 - Tests E2E frontend con Playwright
-- [ ] #59 - Verificación de módulos Spring Modulith
+- [x] #56 - Tests unitarios backend
+- [x] #57 - Tests de integración con Testcontainers
+- [x] #58 - Tests E2E frontend con Playwright
+- [x] #59 - Verificación de módulos Spring Modulith
 
 ---
 
