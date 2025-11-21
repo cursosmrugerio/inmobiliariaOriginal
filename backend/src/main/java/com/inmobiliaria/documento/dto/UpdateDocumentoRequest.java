@@ -1,19 +1,13 @@
 package com.inmobiliaria.documento.dto;
 
-import com.inmobiliaria.documento.domain.TipoDocumento;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import com.inmobiliaria.documento.TipoDocumento;
+import lombok.Data;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class UpdateDocumentoRequest {
-
-    @NotBlank(message = "El nombre es requerido")
     private String nombre;
-
-    private TipoDocumento tipoDocumento;
-
     private String descripcion;
+    private TipoDocumento tipoDocumento;
+    private String entidadTipo;
+    private Long entidadId;
 }
