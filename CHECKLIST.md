@@ -1,7 +1,7 @@
 # Checklist de Implementación - Sistema Inmobiliario
 
 ## Progreso General
-**Total: 62/62 issues completados (100%)**
+**Total: 60/62 issues completados (97%)**
 
 ---
 
@@ -120,12 +120,26 @@
 
 ---
 
-## Milestone 13: Testing y QA (4/4)
+## Milestone 13: Testing y QA (2/4)
 
-- [x] #56 - Tests unitarios backend
-- [x] #57 - Tests de integración con Testcontainers
+- [ ] #56 - Tests unitarios backend ⚠️ **PARCIAL** - Faltan: cobranza, reporte, documento, mantenimiento, notificacion
+- [ ] #57 - Tests de integración con Testcontainers ⚠️ **PARCIAL** - Solo: Persona, Empresa, Contrato. Faltan: Propiedad, Pago, Cobranza, Reporte, Notificacion, Documento, Mantenimiento
 - [x] #58 - Tests E2E frontend con Playwright
 - [x] #59 - Verificación de módulos Spring Modulith
+
+### Cobertura de Tests Actual
+| Módulo | Unit Test | Integration Test |
+|--------|-----------|------------------|
+| empresa | ✅ | ✅ |
+| persona | ✅ | ✅ |
+| propiedad | ✅ | ❌ |
+| contrato | ✅ | ✅ |
+| pago | ✅ | ❌ |
+| cobranza | ❌ | ❌ |
+| reporte | ❌ | ❌ |
+| notificacion | ❌ | ❌ |
+| documento | ❌ | ❌ |
+| mantenimiento | ❌ | ❌ |
 
 ---
 
@@ -151,8 +165,8 @@
 ### Registro de cambios
 | Fecha | Issue | Notas |
 |-------|-------|-------|
-| | | |
+| 2025-11-28 | #56, #57 | Actualizado estado a PARCIAL tras revisión exhaustiva de cobertura de tests |
 
 ---
 
-*Última actualización: 2025-11-21*
+*Última actualización: 2025-11-28*
