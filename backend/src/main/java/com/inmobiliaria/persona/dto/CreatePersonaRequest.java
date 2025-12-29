@@ -2,6 +2,7 @@ package com.inmobiliaria.persona.dto;
 
 import com.inmobiliaria.persona.TipoPersona;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -38,6 +39,7 @@ public class CreatePersonaRequest {
     private String nombreComercial;
 
     // Común
+    @NotBlank(message = "El RFC es requerido")
     @Size(max = 13, message = "El RFC no puede exceder 13 caracteres")
     private String rfc;
 

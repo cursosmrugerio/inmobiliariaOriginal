@@ -7,6 +7,7 @@ import com.inmobiliaria.contrato.ContratoRepository;
 import com.inmobiliaria.notificacion.domain.*;
 import com.inmobiliaria.notificacion.dto.CreateNotificacionRequest;
 import com.inmobiliaria.notificacion.repository.ConfiguracionNotificacionRepository;
+import com.inmobiliaria.notificacion.repository.NotificacionRepository;
 import com.inmobiliaria.shared.multitenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -26,6 +28,7 @@ public class AlertSchedulerService {
 
     private final NotificacionService notificacionService;
     private final ConfiguracionNotificacionRepository configuracionRepository;
+    private final NotificacionRepository notificacionRepository;
     private final CobranzaService cobranzaService;
     private final ContratoRepository contratoRepository;
 
@@ -89,6 +92,12 @@ public class AlertSchedulerService {
     }
 
     private void crearNotificacionVencimientoContrato(ConfiguracionNotificacion config, Contrato contrato) {
+        // Verificar frecuencia de recordatorios
+        if (!debeEnviarNotificacion(config, contrato.getArrendatario().getId(),
+                CategoriaNotificacion.VENCIMIENTO_CONTRATO, contrato.getId())) {
+            return;
+        }
+
         long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), contrato.getFechaFin());
         String mensaje = generarMensajeVencimientoContrato(config, contrato, diasRestantes);
         String asunto = "Aviso: Contrato próximo a vencer - " + contrato.getPropiedad().getDireccionCompleta();
@@ -185,6 +194,12 @@ public class AlertSchedulerService {
     }
 
     private void crearNotificacionPagoPendiente(ConfiguracionNotificacion config, CarteraVencidaDTO item) {
+        // Verificar frecuencia de recordatorios
+        if (!debeEnviarNotificacion(config, item.getPersonaId(),
+                CategoriaNotificacion.PAGO_PENDIENTE, item.getContratoId())) {
+            return;
+        }
+
         String mensaje = generarMensajePagoPendiente(config, item);
         String asunto = "Recordatorio de pago - " + item.getDireccionPropiedad();
 
@@ -216,6 +231,12 @@ public class AlertSchedulerService {
     }
 
     private void crearNotificacionPagoVencido(ConfiguracionNotificacion config, CarteraVencidaDTO item) {
+        // Verificar frecuencia de recordatorios
+        if (!debeEnviarNotificacion(config, item.getPersonaId(),
+                CategoriaNotificacion.PAGO_VENCIDO, item.getContratoId())) {
+            return;
+        }
+
         String mensaje = generarMensajePagoVencido(config, item);
         String asunto = "URGENTE: Pago vencido - " + item.getDireccionPropiedad();
 
@@ -306,6 +327,44 @@ public class AlertSchedulerService {
             .replace("{{monto}}", item.getMontoTotal() != null ? item.getMontoTotal().toString() : "0")
             .replace("{{propiedad}}", item.getDireccionPropiedad() != null ? item.getDireccionPropiedad() : "")
             .replace("{{dias_vencido}}", String.valueOf(item.getDiasVencido()));
+    }
+
+    /**
+     * Verifica si se debe enviar una notificación basado en frecuenciaRecordatorio.
+     * @param config Configuración con frecuenciaRecordatorio (en días)
+     * @param personaId ID de la persona
+     * @param categoria Categoría de notificación
+     * @param referenciaId ID de referencia (contratoId)
+     * @return true si se debe enviar la notificación
+     */
+    private boolean debeEnviarNotificacion(ConfiguracionNotificacion config, Long personaId,
+                                           CategoriaNotificacion categoria, Long referenciaId) {
+        Integer frecuenciaDias = config.getFrecuenciaRecordatorio();
+
+        // Si no hay frecuencia configurada, usar valor por defecto de 7 días
+        if (frecuenciaDias == null || frecuenciaDias <= 0) {
+            frecuenciaDias = 7;
+        }
+
+        var ultimaNotificacion = notificacionRepository.findUltimaNotificacion(
+            config.getEmpresaId(), personaId, categoria, referenciaId);
+
+        if (ultimaNotificacion.isEmpty()) {
+            // No hay notificación previa, se debe enviar
+            return true;
+        }
+
+        LocalDateTime fechaUltima = ultimaNotificacion.get().getFechaCreacion();
+        LocalDateTime fechaLimite = fechaUltima.plusDays(frecuenciaDias);
+
+        boolean debeEnviar = LocalDateTime.now().isAfter(fechaLimite);
+
+        if (!debeEnviar) {
+            log.debug("Notificación omitida para persona {} (última: {}, próxima permitida: {})",
+                personaId, fechaUltima, fechaLimite);
+        }
+
+        return debeEnviar;
     }
 
     // Método para procesar notificaciones pendientes

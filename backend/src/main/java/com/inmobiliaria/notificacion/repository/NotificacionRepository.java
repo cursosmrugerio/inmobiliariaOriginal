@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NotificacionRepository extends JpaRepository<Notificacion, Long> {
@@ -41,4 +42,16 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
     Long countByEmpresaIdAndEstado(
             @Param("empresaId") Long empresaId,
             @Param("estado") EstadoNotificacion estado);
+
+    @Query("SELECT n FROM Notificacion n WHERE n.empresaId = :empresaId " +
+           "AND n.personaId = :personaId " +
+           "AND n.categoria = :categoria " +
+           "AND n.referenciaId = :referenciaId " +
+           "AND n.estado IN ('ENVIADA', 'PENDIENTE') " +
+           "ORDER BY n.fechaCreacion DESC LIMIT 1")
+    Optional<Notificacion> findUltimaNotificacion(
+            @Param("empresaId") Long empresaId,
+            @Param("personaId") Long personaId,
+            @Param("categoria") CategoriaNotificacion categoria,
+            @Param("referenciaId") Long referenciaId);
 }
