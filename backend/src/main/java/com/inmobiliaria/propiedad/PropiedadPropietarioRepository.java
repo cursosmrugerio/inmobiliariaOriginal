@@ -21,20 +21,4 @@ public interface PropiedadPropietarioRepository extends JpaRepository<PropiedadP
     void deleteByEmpresaIdAndPropiedadIdAndPropietarioId(@Param("empresaId") Long empresaId, @Param("propiedadId") Long propiedadId, @Param("propietarioId") Long propietarioId);
 
     Optional<PropiedadPropietario> findByEmpresaIdAndPropiedadIdAndEsPrincipalTrue(Long empresaId, Long propiedadId);
-
-    // Legacy methods for backward compatibility - should be migrated
-    @Deprecated
-    List<PropiedadPropietario> findByPropiedadIdAndActivoTrue(Long propiedadId);
-
-    @Deprecated
-    Optional<PropiedadPropietario> findByPropiedadIdAndPropietarioId(Long propiedadId, Long propietarioId);
-
-    @Deprecated
-    boolean existsByPropiedadIdAndPropietarioId(Long propiedadId, Long propietarioId);
-
-    @Deprecated
-    void deleteByPropiedadIdAndPropietarioId(Long propiedadId, Long propietarioId);
-
-    @Deprecated
-    Optional<PropiedadPropietario> findByPropiedadIdAndEsPrincipalTrue(Long propiedadId);
 }
