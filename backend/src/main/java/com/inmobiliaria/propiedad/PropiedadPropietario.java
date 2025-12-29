@@ -1,6 +1,7 @@
 package com.inmobiliaria.propiedad;
 
 import com.inmobiliaria.persona.Persona;
+import com.inmobiliaria.shared.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,11 +16,14 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PropiedadPropietario {
+public class PropiedadPropietario implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "empresa_id", nullable = false)
+    private Long empresaId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "propiedad_id", nullable = false)

@@ -382,4 +382,215 @@ public class ExportService {
         }
         return value;
     }
+
+    // ========== FINIQUITO EXPORTS ==========
+
+    public byte[] exportFiniquitoExcel(FiniquitoDTO finiquito) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Finiquito");
+
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            int rowNum = 0;
+
+            // Título
+            Row titleRow = sheet.createRow(rowNum++);
+            titleRow.createCell(0).setCellValue("FINIQUITO DE CONTRATO");
+
+            rowNum++;
+
+            // Datos del contrato
+            createLabelValueRow(sheet, rowNum++, "No. Contrato:", finiquito.getNumeroContrato());
+            createLabelValueRow(sheet, rowNum++, "Arrendatario:", finiquito.getNombreArrendatario());
+            createLabelValueRow(sheet, rowNum++, "RFC:", finiquito.getRfcArrendatario());
+            createLabelValueRow(sheet, rowNum++, "Email:", finiquito.getEmailArrendatario());
+            createLabelValueRow(sheet, rowNum++, "Propiedad:", finiquito.getDireccionPropiedad());
+            createLabelValueRow(sheet, rowNum++, "Fecha Inicio:", finiquito.getFechaInicioContrato() != null ? finiquito.getFechaInicioContrato().format(DATE_FORMATTER) : "");
+            createLabelValueRow(sheet, rowNum++, "Fecha Fin:", finiquito.getFechaFinContrato() != null ? finiquito.getFechaFinContrato().format(DATE_FORMATTER) : "");
+            createLabelValueRow(sheet, rowNum++, "Fecha Terminación:", finiquito.getFechaTerminacion() != null ? finiquito.getFechaTerminacion().format(DATE_FORMATTER) : "");
+
+            rowNum++;
+
+            // Resumen financiero
+            createLabelValueRow(sheet, rowNum++, "Total Rentas Pagadas:", formatMoney(finiquito.getTotalRentasPagadas()));
+            createLabelValueRow(sheet, rowNum++, "Total Rentas Pendientes:", formatMoney(finiquito.getTotalRentasPendientes()));
+            createLabelValueRow(sheet, rowNum++, "Saldo Pendiente:", formatMoney(finiquito.getSaldoPendiente()));
+            createLabelValueRow(sheet, rowNum++, "Depósito:", formatMoney(finiquito.getMontoDeposito()));
+            createLabelValueRow(sheet, rowNum++, "Deducciones:", formatMoney(finiquito.getDeduccionesDeposito()));
+            createLabelValueRow(sheet, rowNum++, "Depósito a Devolver:", formatMoney(finiquito.getDepositoADevolver()));
+            createLabelValueRow(sheet, rowNum++, "Monto Liquidación:", formatMoney(finiquito.getMontoLiquidacion()));
+
+            rowNum++;
+
+            // Detalle de conceptos
+            Row headerRow = sheet.createRow(rowNum++);
+            String[] headers = {"Fecha", "Concepto", "Tipo", "Monto", "Estado", "Notas"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (FiniquitoDTO.ConceptoFiniquitoDTO concepto : finiquito.getConceptos()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(concepto.getFecha() != null ? concepto.getFecha().format(DATE_FORMATTER) : "");
+                row.createCell(1).setCellValue(concepto.getConcepto());
+                row.createCell(2).setCellValue(concepto.getTipo());
+                row.createCell(3).setCellValue(concepto.getMonto() != null ? concepto.getMonto().doubleValue() : 0);
+                row.createCell(4).setCellValue(concepto.getEstado());
+                row.createCell(5).setCellValue(concepto.getNotas() != null ? concepto.getNotas() : "");
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    public byte[] exportFiniquitoCsv(FiniquitoDTO finiquito) {
+        StringBuilder csv = new StringBuilder();
+        csv.append("Fecha,Concepto,Tipo,Monto,Estado,Notas\n");
+
+        for (FiniquitoDTO.ConceptoFiniquitoDTO concepto : finiquito.getConceptos()) {
+            csv.append(String.format("%s,%s,%s,%s,%s,%s\n",
+                    concepto.getFecha() != null ? concepto.getFecha().format(DATE_FORMATTER) : "",
+                    escapeCsv(concepto.getConcepto()),
+                    concepto.getTipo(),
+                    concepto.getMonto(),
+                    concepto.getEstado(),
+                    escapeCsv(concepto.getNotas() != null ? concepto.getNotas() : "")));
+        }
+
+        return csv.toString().getBytes();
+    }
+
+    // ========== REPORTE MENSUAL EXPORTS ==========
+
+    public byte[] exportReporteMensualExcel(ReporteMensualDTO reporte) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            // Hoja de resumen
+            Sheet resumenSheet = workbook.createSheet("Resumen");
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            int rowNum = 0;
+
+            Row titleRow = resumenSheet.createRow(rowNum++);
+            titleRow.createCell(0).setCellValue("REPORTE MENSUAL - " + reporte.getPeriodoDescripcion().toUpperCase());
+
+            rowNum++;
+
+            createLabelValueRow(resumenSheet, rowNum++, "Fecha Generación:", reporte.getFechaGeneracion().format(DATE_FORMATTER));
+
+            rowNum++;
+
+            // Propiedades
+            createLabelValueRow(resumenSheet, rowNum++, "Total Propiedades:", String.valueOf(reporte.getTotalPropiedades()));
+            createLabelValueRow(resumenSheet, rowNum++, "Propiedades Ocupadas:", String.valueOf(reporte.getPropiedadesOcupadas()));
+            createLabelValueRow(resumenSheet, rowNum++, "Propiedades Disponibles:", String.valueOf(reporte.getPropiedadesDisponibles()));
+            createLabelValueRow(resumenSheet, rowNum++, "% Ocupación:", reporte.getPorcentajeOcupacion() + "%");
+
+            rowNum++;
+
+            // Contratos
+            createLabelValueRow(resumenSheet, rowNum++, "Contratos Activos:", String.valueOf(reporte.getContratosActivos()));
+            createLabelValueRow(resumenSheet, rowNum++, "Contratos Por Vencer:", String.valueOf(reporte.getContratosPorVencer()));
+            createLabelValueRow(resumenSheet, rowNum++, "Contratos Vencidos:", String.valueOf(reporte.getContratosVencidos()));
+
+            rowNum++;
+
+            // Financiero
+            createLabelValueRow(resumenSheet, rowNum++, "Renta Esperada:", formatMoney(reporte.getRentaEsperada()));
+            createLabelValueRow(resumenSheet, rowNum++, "Renta Cobrada:", formatMoney(reporte.getRentaCobrada()));
+            createLabelValueRow(resumenSheet, rowNum++, "% Cobranza:", reporte.getPorcentajeCobranza() + "%");
+            createLabelValueRow(resumenSheet, rowNum++, "Total Ingresos:", formatMoney(reporte.getTotalIngresos()));
+
+            rowNum++;
+
+            // Cartera
+            createLabelValueRow(resumenSheet, rowNum++, "Cartera Vigente:", formatMoney(reporte.getCarteraVigente()));
+            createLabelValueRow(resumenSheet, rowNum++, "Cartera Vencida:", formatMoney(reporte.getCarteraVencida()));
+            createLabelValueRow(resumenSheet, rowNum++, "Cartera Total:", formatMoney(reporte.getCarteraTotal()));
+
+            resumenSheet.autoSizeColumn(0);
+            resumenSheet.autoSizeColumn(1);
+
+            // Hoja de propiedades
+            Sheet propiedadesSheet = workbook.createSheet("Propiedades");
+            rowNum = 0;
+
+            Row propHeaderRow = propiedadesSheet.createRow(rowNum++);
+            String[] propHeaders = {"Dirección", "Tipo", "Estado", "Arrendatario", "Renta", "Cobrado", "Pendiente", "Estado Pago"};
+            for (int i = 0; i < propHeaders.length; i++) {
+                Cell cell = propHeaderRow.createCell(i);
+                cell.setCellValue(propHeaders[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (ReporteMensualDTO.PropiedadMensualDTO prop : reporte.getDetallePropiedades()) {
+                Row row = propiedadesSheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(prop.getDireccion());
+                row.createCell(1).setCellValue(prop.getTipoPropiedad());
+                row.createCell(2).setCellValue(prop.getEstadoOcupacion());
+                row.createCell(3).setCellValue(prop.getArrendatario());
+                row.createCell(4).setCellValue(prop.getRentaMensual() != null ? prop.getRentaMensual().doubleValue() : 0);
+                row.createCell(5).setCellValue(prop.getRentaCobrada() != null ? prop.getRentaCobrada().doubleValue() : 0);
+                row.createCell(6).setCellValue(prop.getSaldoPendiente() != null ? prop.getSaldoPendiente().doubleValue() : 0);
+                row.createCell(7).setCellValue(prop.getEstadoPago());
+            }
+
+            for (int i = 0; i < propHeaders.length; i++) {
+                propiedadesSheet.autoSizeColumn(i);
+            }
+
+            // Hoja de ingresos
+            Sheet ingresosSheet = workbook.createSheet("Ingresos");
+            rowNum = 0;
+
+            Row ingHeaderRow = ingresosSheet.createRow(rowNum++);
+            String[] ingHeaders = {"Fecha", "Concepto", "Propiedad", "Cliente", "Monto", "Tipo Pago", "Referencia"};
+            for (int i = 0; i < ingHeaders.length; i++) {
+                Cell cell = ingHeaderRow.createCell(i);
+                cell.setCellValue(ingHeaders[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (ReporteMensualDTO.IngresoMensualDTO ing : reporte.getDetalleIngresos()) {
+                Row row = ingresosSheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(ing.getFecha() != null ? ing.getFecha().format(DATE_FORMATTER) : "");
+                row.createCell(1).setCellValue(ing.getConcepto());
+                row.createCell(2).setCellValue(ing.getPropiedad());
+                row.createCell(3).setCellValue(ing.getCliente());
+                row.createCell(4).setCellValue(ing.getMonto() != null ? ing.getMonto().doubleValue() : 0);
+                row.createCell(5).setCellValue(ing.getTipoPago());
+                row.createCell(6).setCellValue(ing.getReferencia() != null ? ing.getReferencia() : "");
+            }
+
+            for (int i = 0; i < ingHeaders.length; i++) {
+                ingresosSheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    public byte[] exportReporteMensualCsv(ReporteMensualDTO reporte) {
+        StringBuilder csv = new StringBuilder();
+        csv.append("Dirección,Tipo,Estado Ocupación,Arrendatario,Renta Mensual,Renta Cobrada,Saldo Pendiente,Estado Pago\n");
+
+        for (ReporteMensualDTO.PropiedadMensualDTO prop : reporte.getDetallePropiedades()) {
+            csv.append(String.format("%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    escapeCsv(prop.getDireccion()),
+                    escapeCsv(prop.getTipoPropiedad()),
+                    prop.getEstadoOcupacion(),
+                    escapeCsv(prop.getArrendatario()),
+                    prop.getRentaMensual(),
+                    prop.getRentaCobrada(),
+                    prop.getSaldoPendiente(),
+                    prop.getEstadoPago()));
+        }
+
+        return csv.toString().getBytes();
+    }
 }

@@ -176,4 +176,76 @@ public class ReporteController {
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csvData);
     }
+
+    // ========== FINIQUITO DE CONTRATO ==========
+
+    @GetMapping("/finiquito/{contratoId}")
+    public ResponseEntity<FiniquitoDTO> getFiniquito(@PathVariable Long contratoId) {
+        return ResponseEntity.ok(reporteService.generarFiniquito(contratoId));
+    }
+
+    @GetMapping("/finiquito/{contratoId}/excel")
+    public ResponseEntity<byte[]> exportFiniquitoExcel(@PathVariable Long contratoId) throws IOException {
+        FiniquitoDTO finiquito = reporteService.generarFiniquito(contratoId);
+        byte[] excelData = exportService.exportFiniquitoExcel(finiquito);
+
+        String filename = "finiquito_" + finiquito.getNumeroContrato() + "_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
+    }
+
+    @GetMapping("/finiquito/{contratoId}/csv")
+    public ResponseEntity<byte[]> exportFiniquitoCsv(@PathVariable Long contratoId) {
+        FiniquitoDTO finiquito = reporteService.generarFiniquito(contratoId);
+        byte[] csvData = exportService.exportFiniquitoCsv(finiquito);
+
+        String filename = "finiquito_" + finiquito.getNumeroContrato() + "_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csvData);
+    }
+
+    // ========== REPORTE MENSUAL ==========
+
+    @GetMapping("/mensual")
+    public ResponseEntity<ReporteMensualDTO> getReporteMensual(
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) {
+        return ResponseEntity.ok(reporteService.generarReporteMensual(mes, anio));
+    }
+
+    @GetMapping("/mensual/excel")
+    public ResponseEntity<byte[]> exportReporteMensualExcel(
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) throws IOException {
+        ReporteMensualDTO reporte = reporteService.generarReporteMensual(mes, anio);
+        byte[] excelData = exportService.exportReporteMensualExcel(reporte);
+
+        String filename = "reporte_mensual_" + anio + "_" + String.format("%02d", mes) + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
+    }
+
+    @GetMapping("/mensual/csv")
+    public ResponseEntity<byte[]> exportReporteMensualCsv(
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) {
+        ReporteMensualDTO reporte = reporteService.generarReporteMensual(mes, anio);
+        byte[] csvData = exportService.exportReporteMensualCsv(reporte);
+
+        String filename = "reporte_mensual_" + anio + "_" + String.format("%02d", mes) + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csvData);
+    }
 }

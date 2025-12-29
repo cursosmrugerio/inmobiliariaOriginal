@@ -190,9 +190,9 @@ class PropiedadServiceTest {
                 .thenReturn(Optional.of(propiedad));
         when(personaRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
                 .thenReturn(Optional.of(propietario));
-        when(propiedadPropietarioRepository.existsByPropiedadIdAndPropietarioId(1L, 1L))
+        when(propiedadPropietarioRepository.existsByEmpresaIdAndPropiedadIdAndPropietarioId(EMPRESA_ID, 1L, 1L))
                 .thenReturn(false);
-        when(propiedadPropietarioRepository.findByPropiedadIdAndEsPrincipalTrue(1L))
+        when(propiedadPropietarioRepository.findByEmpresaIdAndPropiedadIdAndEsPrincipalTrue(EMPRESA_ID, 1L))
                 .thenReturn(Optional.empty());
         when(propiedadPropietarioRepository.save(any(PropiedadPropietario.class)))
                 .thenAnswer(inv -> inv.getArgument(0));

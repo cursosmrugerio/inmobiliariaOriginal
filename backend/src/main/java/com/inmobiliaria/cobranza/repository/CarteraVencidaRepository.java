@@ -50,4 +50,13 @@ public interface CarteraVencidaRepository extends JpaRepository<CarteraVencida, 
 
     List<CarteraVencida> findByEmpresaIdAndFechaVencimientoBetweenAndActivoTrue(
             Long empresaId, LocalDate fechaInicio, LocalDate fechaFin);
+
+    @Query("SELECT c FROM CarteraVencida c WHERE c.empresaId = :empresaId " +
+           "AND c.contratoId = :contratoId AND c.concepto = :concepto " +
+           "AND c.fechaVencimiento = :fechaVencimiento AND c.activo = true")
+    Optional<CarteraVencida> findByCargoIdentifier(
+            @Param("empresaId") Long empresaId,
+            @Param("contratoId") Long contratoId,
+            @Param("concepto") String concepto,
+            @Param("fechaVencimiento") LocalDate fechaVencimiento);
 }

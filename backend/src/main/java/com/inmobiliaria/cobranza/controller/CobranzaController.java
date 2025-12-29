@@ -2,6 +2,7 @@ package com.inmobiliaria.cobranza.controller;
 
 import com.inmobiliaria.cobranza.dto.*;
 import com.inmobiliaria.cobranza.service.CobranzaService;
+import com.inmobiliaria.cobranza.service.MorosidadAutomaticaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cobranza")
@@ -21,6 +23,7 @@ import java.util.List;
 public class CobranzaController {
 
     private final CobranzaService cobranzaService;
+    private final MorosidadAutomaticaService morosidadAutomaticaService;
 
     // ========== CARTERA VENCIDA ==========
 
@@ -139,5 +142,27 @@ public class CobranzaController {
             @RequestParam BigDecimal montoCobrado,
             @RequestParam Integer pagosRecibidos) {
         return ResponseEntity.ok(cobranzaService.actualizarProyeccionCobrado(periodo, montoCobrado, pagosRecibidos));
+    }
+
+    // ========== MOROSIDAD AUTOMÁTICA ==========
+
+    /**
+     * Sincroniza manualmente los cargos vencidos con la cartera de cobranza.
+     * Útil para ejecutar la sincronización fuera del horario programado.
+     */
+    @PostMapping("/sincronizar-morosidad")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Map<String, Object>> sincronizarMorosidad() {
+        Long empresaId = com.inmobiliaria.shared.multitenancy.TenantContext.getCurrentTenant();
+        MorosidadAutomaticaService.SincronizacionResult result =
+                morosidadAutomaticaService.sincronizarMorosidadPorEmpresa(empresaId);
+
+        return ResponseEntity.ok(Map.of(
+                "mensaje", "Sincronización de morosidad completada",
+                "nuevosRegistros", result.nuevosRegistros(),
+                "actualizados", result.actualizados(),
+                "sinCambios", result.sinCambios(),
+                "desactivados", result.desactivados()
+        ));
     }
 }

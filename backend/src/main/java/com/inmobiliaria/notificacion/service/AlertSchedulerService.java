@@ -2,6 +2,8 @@ package com.inmobiliaria.notificacion.service;
 
 import com.inmobiliaria.cobranza.dto.CarteraVencidaDTO;
 import com.inmobiliaria.cobranza.service.CobranzaService;
+import com.inmobiliaria.contrato.Contrato;
+import com.inmobiliaria.contrato.ContratoRepository;
 import com.inmobiliaria.notificacion.domain.*;
 import com.inmobiliaria.notificacion.dto.CreateNotificacionRequest;
 import com.inmobiliaria.notificacion.repository.ConfiguracionNotificacionRepository;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -24,6 +27,7 @@ public class AlertSchedulerService {
     private final NotificacionService notificacionService;
     private final ConfiguracionNotificacionRepository configuracionRepository;
     private final CobranzaService cobranzaService;
+    private final ContratoRepository contratoRepository;
 
     @Scheduled(cron = "0 0 8 * * *") // Todos los días a las 8 AM
     public void procesarAlertasDiarias() {
@@ -69,8 +73,80 @@ public class AlertSchedulerService {
         log.info("Procesando alertas de vencimiento de contrato para empresa {} con {} días de anticipación",
             config.getEmpresaId(), diasAnticipacion);
 
-        // TODO: Integrar con ContratosService cuando esté implementado
-        // Por ahora, este método está preparado para recibir contratos próximos a vencer
+        try {
+            List<Contrato> contratosPorVencer = contratoRepository.findContratosPorVencer(
+                config.getEmpresaId(), fechaLimite);
+
+            for (Contrato contrato : contratosPorVencer) {
+                crearNotificacionVencimientoContrato(config, contrato);
+            }
+
+            log.info("Se procesaron {} contratos próximos a vencer para empresa {}",
+                contratosPorVencer.size(), config.getEmpresaId());
+        } catch (Exception e) {
+            log.error("Error procesando alertas de vencimiento de contrato: {}", e.getMessage());
+        }
+    }
+
+    private void crearNotificacionVencimientoContrato(ConfiguracionNotificacion config, Contrato contrato) {
+        long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), contrato.getFechaFin());
+        String mensaje = generarMensajeVencimientoContrato(config, contrato, diasRestantes);
+        String asunto = "Aviso: Contrato próximo a vencer - " + contrato.getPropiedad().getDireccionCompleta();
+
+        String emailArrendatario = contrato.getArrendatario().getEmail();
+        String telefonoArrendatario = contrato.getArrendatario().getTelefono();
+
+        if (config.getEmailHabilitado() && emailArrendatario != null && !emailArrendatario.isEmpty()) {
+            crearNotificacion(
+                TipoNotificacion.EMAIL,
+                CategoriaNotificacion.VENCIMIENTO_CONTRATO,
+                contrato.getArrendatario().getId(),
+                emailArrendatario,
+                asunto,
+                mensaje,
+                contrato.getId(),
+                "CONTRATO"
+            );
+        }
+
+        if (config.getWhatsappHabilitado() && telefonoArrendatario != null && !telefonoArrendatario.isEmpty()) {
+            crearNotificacion(
+                TipoNotificacion.WHATSAPP,
+                CategoriaNotificacion.VENCIMIENTO_CONTRATO,
+                contrato.getArrendatario().getId(),
+                telefonoArrendatario,
+                asunto,
+                mensaje,
+                contrato.getId(),
+                "CONTRATO"
+            );
+        }
+    }
+
+    private String generarMensajeVencimientoContrato(ConfiguracionNotificacion config, Contrato contrato, long diasRestantes) {
+        if (config.getPlantillaEmail() != null && !config.getPlantillaEmail().isEmpty()) {
+            return config.getPlantillaEmail()
+                .replace("{{nombre}}", contrato.getArrendatario().getNombreCompleto())
+                .replace("{{propiedad}}", contrato.getPropiedad().getDireccionCompleta())
+                .replace("{{fecha_vencimiento}}", contrato.getFechaFin().toString())
+                .replace("{{dias_restantes}}", String.valueOf(diasRestantes))
+                .replace("{{numero_contrato}}", contrato.getNumeroContrato());
+        }
+
+        return String.format(
+            "Estimado(a) %s,\n\n" +
+            "Le informamos que su contrato de arrendamiento número %s " +
+            "para la propiedad ubicada en %s vencerá en %d días (fecha: %s).\n\n" +
+            "Por favor, comuníquese con nosotros para discutir la renovación o " +
+            "terminación del contrato.\n\n" +
+            "Saludos cordiales,\n" +
+            "Administración",
+            contrato.getArrendatario().getNombreCompleto(),
+            contrato.getNumeroContrato(),
+            contrato.getPropiedad().getDireccionCompleta(),
+            diasRestantes,
+            contrato.getFechaFin()
+        );
     }
 
     @Transactional

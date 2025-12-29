@@ -200,7 +200,7 @@ public class PropiedadService {
         Propiedad propiedad = propiedadRepository.findByIdAndEmpresaId(propiedadId, empresaId)
                 .orElseThrow(() -> new EntityNotFoundException("Propiedad no encontrada"));
 
-        if (propiedadPropietarioRepository.existsByPropiedadIdAndPropietarioId(propiedadId, request.getPropietarioId())) {
+        if (propiedadPropietarioRepository.existsByEmpresaIdAndPropiedadIdAndPropietarioId(empresaId, propiedadId, request.getPropietarioId())) {
             throw new IllegalArgumentException("Este propietario ya está asignado a la propiedad");
         }
 
@@ -209,7 +209,7 @@ public class PropiedadService {
 
         // If this is set as principal, unset other principals
         if (request.isEsPrincipal()) {
-            propiedadPropietarioRepository.findByPropiedadIdAndEsPrincipalTrue(propiedadId)
+            propiedadPropietarioRepository.findByEmpresaIdAndPropiedadIdAndEsPrincipalTrue(empresaId, propiedadId)
                     .ifPresent(pp -> {
                         pp.setEsPrincipal(false);
                         propiedadPropietarioRepository.save(pp);
@@ -217,6 +217,7 @@ public class PropiedadService {
         }
 
         PropiedadPropietario pp = PropiedadPropietario.builder()
+                .empresaId(empresaId)
                 .propiedad(propiedad)
                 .propietario(propietario)
                 .porcentajePropiedad(request.getPorcentajePropiedad() != null ?
@@ -236,7 +237,7 @@ public class PropiedadService {
         propiedadRepository.findByIdAndEmpresaId(propiedadId, empresaId)
                 .orElseThrow(() -> new EntityNotFoundException("Propiedad no encontrada"));
 
-        propiedadPropietarioRepository.deleteByPropiedadIdAndPropietarioId(propiedadId, propietarioId);
+        propiedadPropietarioRepository.deleteByEmpresaIdAndPropiedadIdAndPropietarioId(empresaId, propiedadId, propietarioId);
     }
 
     @Transactional(readOnly = true)
@@ -245,7 +246,7 @@ public class PropiedadService {
         propiedadRepository.findByIdAndEmpresaId(propiedadId, empresaId)
                 .orElseThrow(() -> new EntityNotFoundException("Propiedad no encontrada"));
 
-        return propiedadPropietarioRepository.findByPropiedadIdAndActivoTrue(propiedadId)
+        return propiedadPropietarioRepository.findByEmpresaIdAndPropiedadIdAndActivoTrue(empresaId, propiedadId)
                 .stream().map(PropiedadPropietarioDTO::fromEntity).toList();
     }
 

@@ -6,6 +6,13 @@ import com.inmobiliaria.cobranza.domain.SeguimientoCobranza;
 import com.inmobiliaria.cobranza.repository.CarteraVencidaRepository;
 import com.inmobiliaria.cobranza.repository.ProyeccionCobranzaRepository;
 import com.inmobiliaria.cobranza.repository.SeguimientoCobranzaRepository;
+import com.inmobiliaria.contrato.Contrato;
+import com.inmobiliaria.contrato.ContratoRepository;
+import com.inmobiliaria.contrato.EstadoContrato;
+import com.inmobiliaria.pago.Cargo;
+import com.inmobiliaria.pago.CargoRepository;
+import com.inmobiliaria.pago.Pago;
+import com.inmobiliaria.pago.PagoRepository;
 import com.inmobiliaria.persona.Persona;
 import com.inmobiliaria.persona.PersonaRepository;
 import com.inmobiliaria.propiedad.Propiedad;
@@ -19,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +42,9 @@ public class ReporteService {
     private final SeguimientoCobranzaRepository seguimientoCobranzaRepository;
     private final PersonaRepository personaRepository;
     private final PropiedadRepository propiedadRepository;
+    private final ContratoRepository contratoRepository;
+    private final PagoRepository pagoRepository;
+    private final CargoRepository cargoRepository;
 
     // ========== ESTADO DE CUENTA (#39) ==========
 
@@ -435,6 +447,308 @@ public class ReporteService {
                 .totalPagosEsperados(totalPagosEsperados)
                 .totalPagosRecibidos(totalPagosRecibidos)
                 .detalleMensual(detalleMensual)
+                .build();
+    }
+
+    // ========== FINIQUITO DE CONTRATO ==========
+
+    public FiniquitoDTO generarFiniquito(Long contratoId) {
+        Long empresaId = TenantContext.getCurrentTenant();
+
+        Contrato contrato = contratoRepository.findByIdAndEmpresaId(contratoId, empresaId)
+                .orElseThrow(() -> new RuntimeException("Contrato no encontrado"));
+
+        Persona arrendatario = contrato.getArrendatario();
+        Propiedad propiedad = contrato.getPropiedad();
+
+        // Obtener cargos del contrato
+        List<Cargo> cargos = cargoRepository.findByContratoIdAndEmpresaId(contratoId, empresaId);
+
+        // Obtener pagos del contrato
+        List<Pago> pagos = pagoRepository.findByContratoIdAndEmpresaId(contratoId, empresaId);
+
+        // Calcular totales
+        BigDecimal totalRentasPagadas = pagos.stream()
+                .map(Pago::getMontoAplicado)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalCargos = cargos.stream()
+                .map(Cargo::getMontoOriginal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal saldoPendiente = cargos.stream()
+                .map(Cargo::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalRentasPendientes = saldoPendiente;
+
+        // Calcular depósito
+        BigDecimal montoDeposito = contrato.getMontoDeposito() != null ? contrato.getMontoDeposito() : BigDecimal.ZERO;
+        BigDecimal deduccionesDeposito = saldoPendiente.min(montoDeposito);
+        BigDecimal depositoADevolver = montoDeposito.subtract(deduccionesDeposito);
+
+        // Monto de liquidación (positivo = debe el arrendatario, negativo = se le devuelve)
+        BigDecimal montoLiquidacion = saldoPendiente.subtract(montoDeposito);
+        if (montoLiquidacion.compareTo(BigDecimal.ZERO) < 0) {
+            montoLiquidacion = BigDecimal.ZERO;
+        }
+
+        // Crear lista de conceptos
+        List<FiniquitoDTO.ConceptoFiniquitoDTO> conceptos = new ArrayList<>();
+
+        // Agregar cargos
+        for (Cargo cargo : cargos) {
+            conceptos.add(FiniquitoDTO.ConceptoFiniquitoDTO.builder()
+                    .concepto(cargo.getConcepto())
+                    .tipo("CARGO")
+                    .fecha(cargo.getFechaCargo())
+                    .monto(cargo.getMontoOriginal())
+                    .estado(cargo.getEstado().name())
+                    .notas(cargo.getNotas())
+                    .build());
+        }
+
+        // Agregar pagos
+        for (Pago pago : pagos) {
+            conceptos.add(FiniquitoDTO.ConceptoFiniquitoDTO.builder()
+                    .concepto("Pago - " + pago.getNumeroRecibo())
+                    .tipo("ABONO")
+                    .fecha(pago.getFechaPago())
+                    .monto(pago.getMonto())
+                    .estado(pago.getEstado().name())
+                    .notas(pago.getNotas())
+                    .build());
+        }
+
+        // Agregar depósito
+        if (montoDeposito.compareTo(BigDecimal.ZERO) > 0) {
+            conceptos.add(FiniquitoDTO.ConceptoFiniquitoDTO.builder()
+                    .concepto("Depósito en garantía")
+                    .tipo("DEPOSITO")
+                    .fecha(contrato.getFechaInicio())
+                    .monto(montoDeposito)
+                    .estado("REGISTRADO")
+                    .build());
+
+            if (deduccionesDeposito.compareTo(BigDecimal.ZERO) > 0) {
+                conceptos.add(FiniquitoDTO.ConceptoFiniquitoDTO.builder()
+                        .concepto("Deducción de depósito por adeudos")
+                        .tipo("DEDUCCION")
+                        .fecha(LocalDate.now())
+                        .monto(deduccionesDeposito.negate())
+                        .estado("APLICADO")
+                        .build());
+            }
+        }
+
+        // Ordenar por fecha
+        conceptos.sort(Comparator.comparing(FiniquitoDTO.ConceptoFiniquitoDTO::getFecha));
+
+        return FiniquitoDTO.builder()
+                .contratoId(contratoId)
+                .numeroContrato(contrato.getNumeroContrato())
+                .empresaId(empresaId)
+                .nombreEmpresa("Inmobiliaria")
+                .arrendatarioId(arrendatario.getId())
+                .nombreArrendatario(arrendatario.getNombreCompleto())
+                .rfcArrendatario(arrendatario.getRfc())
+                .emailArrendatario(arrendatario.getEmail())
+                .telefonoArrendatario(arrendatario.getTelefono())
+                .propiedadId(propiedad.getId())
+                .direccionPropiedad(propiedad.getDireccionCompleta())
+                .tipoPropiedad(propiedad.getTipoPropiedad() != null ? propiedad.getTipoPropiedad().getNombre() : "")
+                .fechaInicioContrato(contrato.getFechaInicio())
+                .fechaFinContrato(contrato.getFechaFin())
+                .fechaTerminacion(LocalDate.now())
+                .motivoTerminacion(contrato.getEstado() != null ? contrato.getEstado().name() : "")
+                .montoRentaMensual(contrato.getMontoRenta())
+                .montoDeposito(montoDeposito)
+                .totalRentasPagadas(totalRentasPagadas)
+                .totalRentasPendientes(totalRentasPendientes)
+                .totalCargosAdicionales(BigDecimal.ZERO)
+                .totalPagosRealizados(totalRentasPagadas)
+                .saldoPendiente(saldoPendiente)
+                .depositoADevolver(depositoADevolver)
+                .deduccionesDeposito(deduccionesDeposito)
+                .montoLiquidacion(montoLiquidacion)
+                .conceptos(conceptos)
+                .fechaGeneracion(LocalDate.now())
+                .generadoPor("Sistema")
+                .build();
+    }
+
+    // ========== REPORTE MENSUAL ==========
+
+    public ReporteMensualDTO generarReporteMensual(Integer mes, Integer anio) {
+        Long empresaId = TenantContext.getCurrentTenant();
+
+        YearMonth periodo = YearMonth.of(anio, mes);
+        LocalDate inicioMes = periodo.atDay(1);
+        LocalDate finMes = periodo.atEndOfMonth();
+
+        String periodoDescripcion = periodo.getMonth().getDisplayName(TextStyle.FULL, new Locale("es", "ES"))
+                + " " + anio;
+
+        // Propiedades
+        List<Propiedad> propiedades = propiedadRepository.findByEmpresaIdAndActivoTrue(empresaId);
+        int totalPropiedades = propiedades.size();
+
+        // Contratos
+        List<Contrato> todosContratos = contratoRepository.findByEmpresaId(empresaId);
+        List<Contrato> contratosActivos = contratoRepository.findByEmpresaIdAndEstado(empresaId, EstadoContrato.ACTIVO);
+        List<Contrato> contratosPorVencer = contratoRepository.findContratosPorVencer(empresaId, finMes.plusDays(30));
+        List<Contrato> contratosVencidos = contratoRepository.findContratosVencidos(empresaId, finMes);
+
+        int propiedadesOcupadas = (int) contratosActivos.stream()
+                .map(c -> c.getPropiedad().getId())
+                .distinct()
+                .count();
+        int propiedadesDisponibles = totalPropiedades - propiedadesOcupadas;
+
+        BigDecimal porcentajeOcupacion = BigDecimal.ZERO;
+        if (totalPropiedades > 0) {
+            porcentajeOcupacion = BigDecimal.valueOf(propiedadesOcupadas)
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalPropiedades), 2, RoundingMode.HALF_UP);
+        }
+
+        // Pagos del mes
+        List<Pago> pagosDelMes = pagoRepository.findPagosByPeriodo(empresaId, inicioMes, finMes);
+
+        BigDecimal ingresosPorRenta = pagosDelMes.stream()
+                .map(Pago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Renta esperada (sum of all active contracts' monthly rent)
+        BigDecimal rentaEsperada = contratosActivos.stream()
+                .map(Contrato::getMontoRenta)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal porcentajeCobranza = BigDecimal.ZERO;
+        if (rentaEsperada.compareTo(BigDecimal.ZERO) > 0) {
+            porcentajeCobranza = ingresosPorRenta.multiply(BigDecimal.valueOf(100))
+                    .divide(rentaEsperada, 2, RoundingMode.HALF_UP);
+        }
+
+        // Cartera
+        List<CarteraVencida> cartera = carteraVencidaRepository.findByEmpresaIdAndActivoTrue(empresaId);
+
+        BigDecimal carteraVigente = cartera.stream()
+                .filter(c -> c.getDiasVencido() != null && c.getDiasVencido() <= 0)
+                .map(CarteraVencida::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal carteraVencida = cartera.stream()
+                .filter(c -> c.getDiasVencido() != null && c.getDiasVencido() > 0)
+                .map(CarteraVencida::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal carteraTotal = carteraVigente.add(carteraVencida);
+
+        int clientesConAdeudo = (int) cartera.stream()
+                .filter(c -> c.getMontoPendiente().compareTo(BigDecimal.ZERO) > 0)
+                .map(CarteraVencida::getPersonaId)
+                .distinct()
+                .count();
+
+        // Detalle por propiedad
+        List<ReporteMensualDTO.PropiedadMensualDTO> detallePropiedades = new ArrayList<>();
+        for (Propiedad prop : propiedades) {
+            Optional<Contrato> contratoActivo = contratosActivos.stream()
+                    .filter(c -> c.getPropiedad().getId().equals(prop.getId()))
+                    .findFirst();
+
+            String estadoOcupacion = contratoActivo.isPresent() ? "OCUPADA" : "DISPONIBLE";
+            String arrendatarioNombre = contratoActivo.map(c -> c.getArrendatario().getNombreCompleto()).orElse("-");
+            BigDecimal rentaMensual = contratoActivo.map(Contrato::getMontoRenta).orElse(BigDecimal.ZERO);
+
+            // Buscar pagos de esta propiedad en el mes
+            BigDecimal rentaCobrada = pagosDelMes.stream()
+                    .filter(p -> p.getContrato().getPropiedad().getId().equals(prop.getId()))
+                    .map(Pago::getMonto)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal saldoPendiente = rentaMensual.subtract(rentaCobrada);
+            String estadoPago = saldoPendiente.compareTo(BigDecimal.ZERO) <= 0 ? "AL_CORRIENTE" : "PENDIENTE";
+
+            detallePropiedades.add(ReporteMensualDTO.PropiedadMensualDTO.builder()
+                    .propiedadId(prop.getId())
+                    .direccion(prop.getDireccionCompleta())
+                    .tipoPropiedad(prop.getTipoPropiedad() != null ? prop.getTipoPropiedad().getNombre() : "")
+                    .estadoOcupacion(estadoOcupacion)
+                    .arrendatario(arrendatarioNombre)
+                    .rentaMensual(rentaMensual)
+                    .rentaCobrada(rentaCobrada)
+                    .saldoPendiente(saldoPendiente.max(BigDecimal.ZERO))
+                    .estadoPago(estadoPago)
+                    .build());
+        }
+
+        // Detalle de ingresos
+        List<ReporteMensualDTO.IngresoMensualDTO> detalleIngresos = new ArrayList<>();
+        for (Pago pago : pagosDelMes) {
+            detalleIngresos.add(ReporteMensualDTO.IngresoMensualDTO.builder()
+                    .fecha(pago.getFechaPago())
+                    .concepto("Pago - " + pago.getNumeroRecibo())
+                    .propiedad(pago.getContrato().getPropiedad().getDireccionCompleta())
+                    .cliente(pago.getPersona().getNombreCompleto())
+                    .monto(pago.getMonto())
+                    .tipoPago(pago.getTipoPago() != null ? pago.getTipoPago().name() : "")
+                    .referencia(pago.getReferencia())
+                    .build());
+        }
+
+        // Top 5 morosos
+        List<ReporteMensualDTO.MorosoDTO> topMorosos = cartera.stream()
+                .filter(c -> c.getMontoPendiente().compareTo(BigDecimal.ZERO) > 0)
+                .sorted((a, b) -> b.getMontoPendiente().compareTo(a.getMontoPendiente()))
+                .limit(5)
+                .map(cv -> {
+                    Persona persona = personaRepository.findByIdAndEmpresaId(cv.getPersonaId(), empresaId).orElse(null);
+                    Propiedad prop = propiedadRepository.findByIdAndEmpresaId(cv.getPropiedadId(), empresaId).orElse(null);
+                    return ReporteMensualDTO.MorosoDTO.builder()
+                            .personaId(cv.getPersonaId())
+                            .nombre(persona != null ? persona.getNombreCompleto() : "")
+                            .propiedad(prop != null ? prop.getDireccionCompleta() : "")
+                            .montoAdeudado(cv.getMontoPendiente())
+                            .diasVencido(cv.getDiasVencido() != null ? cv.getDiasVencido() : 0)
+                            .estadoCobranza(cv.getEstadoCobranza() != null ? cv.getEstadoCobranza().name() : "")
+                            .build();
+                })
+                .toList();
+
+        return ReporteMensualDTO.builder()
+                .empresaId(empresaId)
+                .nombreEmpresa("Inmobiliaria")
+                .mes(mes)
+                .anio(anio)
+                .periodoDescripcion(periodoDescripcion)
+                .fechaGeneracion(LocalDate.now())
+                .totalPropiedades(totalPropiedades)
+                .propiedadesOcupadas(propiedadesOcupadas)
+                .propiedadesDisponibles(propiedadesDisponibles)
+                .porcentajeOcupacion(porcentajeOcupacion)
+                .contratosActivos(contratosActivos.size())
+                .contratosPorVencer(contratosPorVencer.size())
+                .contratosVencidos(contratosVencidos.size())
+                .contratosNuevos(0) // Would need to track creation date
+                .contratosTerminados(0)
+                .contratosRenovados(0)
+                .ingresosPorRenta(ingresosPorRenta)
+                .ingresosPorOtrosConceptos(BigDecimal.ZERO)
+                .totalIngresos(ingresosPorRenta)
+                .rentaEsperada(rentaEsperada)
+                .rentaCobrada(ingresosPorRenta)
+                .porcentajeCobranza(porcentajeCobranza)
+                .carteraVigente(carteraVigente)
+                .carteraVencida(carteraVencida)
+                .carteraTotal(carteraTotal)
+                .clientesConAdeudo(clientesConAdeudo)
+                .clientesAlCorriente(contratosActivos.size() - clientesConAdeudo)
+                .detallePropiedades(detallePropiedades)
+                .detalleIngresos(detalleIngresos)
+                .topMorosos(topMorosos)
                 .build();
     }
 }

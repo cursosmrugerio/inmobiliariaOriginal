@@ -47,6 +47,12 @@ public class PagoService {
         return toDTO(pago);
     }
 
+    public Pago getPagoEntity(Long id) {
+        Long empresaId = TenantContext.getCurrentTenant();
+        return pagoRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado"));
+    }
+
     public List<PagoDTO> getPagosByContrato(Long contratoId) {
         Long empresaId = TenantContext.getCurrentTenant();
         return pagoRepository.findPagosByContratoOrdenados(empresaId, contratoId).stream()

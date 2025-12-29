@@ -4,7 +4,9 @@ import com.inmobiliaria.pago.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.List;
 public class PagoController {
 
     private final PagoService pagoService;
+    private final ReciboPdfService reciboPdfService;
 
     // ==================== PAGOS ====================
 
@@ -125,5 +128,23 @@ public class PagoController {
     @GetMapping("/saldo-pendiente/{contratoId}")
     public ResponseEntity<BigDecimal> getSaldoPendienteContrato(@PathVariable Long contratoId) {
         return ResponseEntity.ok(pagoService.getSaldoPendienteContrato(contratoId));
+    }
+
+    // ==================== RECIBO PDF ====================
+
+    /**
+     * Genera y descarga el recibo de pago en formato PDF.
+     */
+    @GetMapping("/{id}/recibo/pdf")
+    public ResponseEntity<byte[]> descargarReciboPdf(@PathVariable Long id) {
+        Pago pago = pagoService.getPagoEntity(id);
+        byte[] pdfData = reciboPdfService.generarReciboPdf(pago);
+
+        String filename = "recibo_" + pago.getNumeroRecibo() + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfData);
     }
 }

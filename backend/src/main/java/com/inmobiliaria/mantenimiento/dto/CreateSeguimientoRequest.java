@@ -1,6 +1,6 @@
 package com.inmobiliaria.mantenimiento.dto;
 
-import com.inmobiliaria.mantenimiento.EstadoOrden;
+import com.inmobiliaria.mantenimiento.domain.EstadoOrden;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
