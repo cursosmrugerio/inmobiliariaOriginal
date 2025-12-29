@@ -245,3 +245,51 @@ export interface ReporteMensual {
   detalleIngresos: IngresoMensual[];
   topMorosos: Moroso[];
 }
+
+// Estado de Cuenta Mensual por Cliente
+export interface MovimientoMensual {
+  fecha: string;
+  concepto: string;
+  tipo: string;
+  cargo: number;
+  abono: number;
+  saldoAcumulado: number;
+  referencia: string;
+  propiedad: string;
+  estado: string;
+}
+
+export interface PropiedadResumen {
+  propiedadId: number;
+  direccion: string;
+  rentaMensual: number;
+  cargosDelMes: number;
+  pagosDelMes: number;
+  saldoPendiente: number;
+  estadoPago: string;
+}
+
+export interface EstadoCuentaMensual {
+  personaId: number;
+  nombreCliente: string;
+  tipoPersona: string;
+  rfc: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
+  empresaId: number;
+  nombreEmpresa: string;
+  mes: number;
+  anio: number;
+  periodoDescripcion: string;
+  fechaGeneracion: string;
+  saldoInicial: number;
+  totalCargos: number;
+  totalAbonos: number;
+  saldoFinal: number;
+  saldoVencido: number;
+  saldoPorVencer: number;
+  diasPromedioVencido: number;
+  movimientos: MovimientoMensual[];
+  propiedades: PropiedadResumen[];
+}

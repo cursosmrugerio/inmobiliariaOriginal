@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as BackIcon } from '@mui/icons-material';
 import { propiedadService } from '../../services/propiedadService';
+import { catalogoService, Estado } from '../../services/catalogoService';
 import { TipoPropiedad, CreatePropiedadRequest, UpdatePropiedadRequest } from '../../types/propiedad';
 import { useEmpresa } from '../../context/EmpresaContext';
 
@@ -31,6 +32,7 @@ export default function PropiedadForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tipos, setTipos] = useState<TipoPropiedad[]>([]);
+  const [estados, setEstados] = useState<Estado[]>([]);
 
   const [formData, setFormData] = useState<CreatePropiedadRequest>({
     tipoPropiedadId: 0,
@@ -39,6 +41,7 @@ export default function PropiedadForm() {
     calle: '',
     numeroExterior: '',
     numeroInterior: '',
+    estadoId: 0,
     codigoPostal: '',
     referencias: '',
     superficieTerreno: undefined,
@@ -56,6 +59,7 @@ export default function PropiedadForm() {
 
   useEffect(() => {
     loadTipos();
+    loadEstados();
     if (isEdit && id) {
       loadPropiedad(parseInt(id));
     }
@@ -67,6 +71,15 @@ export default function PropiedadForm() {
       setTipos(data);
     } catch (err) {
       console.error('Error loading tipos:', err);
+    }
+  };
+
+  const loadEstados = async () => {
+    try {
+      const data = await catalogoService.getEstados();
+      setEstados(data);
+    } catch (err) {
+      console.error('Error loading estados:', err);
     }
   };
 
@@ -139,6 +152,11 @@ export default function PropiedadForm() {
 
     if (!formData.nombre || !formData.calle) {
       setError('Nombre y calle son requeridos');
+      return;
+    }
+
+    if (!formData.estadoId) {
+      setError('Seleccione un estado');
       return;
     }
 
@@ -261,6 +279,20 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Estado</InputLabel>
+                <Select
+                  value={formData.estadoId || ''}
+                  label="Estado"
+                  onChange={(e) => handleSelectChange('estadoId', e.target.value as number)}
+                >
+                  {estados.map(estado => (
+                    <MenuItem key={estado.id} value={estado.id}>{estado.nombre}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
@@ -270,7 +302,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid item xs={12} sm={9}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Referencias"

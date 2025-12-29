@@ -40,6 +40,7 @@ import type {
   ProyeccionCobranzaReporte,
   Finiquito,
   ReporteMensual,
+  EstadoCuentaMensual,
 } from '../../types/reporte';
 import type { Persona } from '../../types/persona';
 import type { Contrato, EstadoContrato } from '../../types/contrato';
@@ -97,6 +98,12 @@ export default function ReportesPage() {
   const [reporteMensual, setReporteMensual] = useState<ReporteMensual | null>(null);
   const [mesReporte, setMesReporte] = useState(new Date().getMonth() + 1);
   const [anioReporte, setAnioReporte] = useState(new Date().getFullYear());
+
+  // Estado de Cuenta Mensual
+  const [estadoCuentaMensual, setEstadoCuentaMensual] = useState<EstadoCuentaMensual | null>(null);
+  const [selectedPersonaECM, setSelectedPersonaECM] = useState<Persona | null>(null);
+  const [mesECM, setMesECM] = useState(new Date().getMonth() + 1);
+  const [anioECM, setAnioECM] = useState(new Date().getFullYear());
 
   useEffect(() => {
     loadPersonas();
@@ -342,6 +349,41 @@ export default function ReportesPage() {
     }
   };
 
+  // Estado de Cuenta Mensual handlers
+  const handleGenerarEstadoCuentaMensual = async () => {
+    if (!selectedPersonaECM) {
+      setError('Seleccione un cliente');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reporteService.getEstadoCuentaMensual(
+        selectedPersonaECM.id,
+        mesECM,
+        anioECM
+      );
+      setEstadoCuentaMensual(data);
+    } catch {
+      setError('Error al generar estado de cuenta mensual');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportEstadoCuentaMensual = async (format: 'excel' | 'csv') => {
+    if (!selectedPersonaECM) return;
+    try {
+      const blob = format === 'excel'
+        ? await reporteService.exportEstadoCuentaMensualExcel(selectedPersonaECM.id, mesECM, anioECM)
+        : await reporteService.exportEstadoCuentaMensualCsv(selectedPersonaECM.id, mesECM, anioECM);
+      const filename = `estado_cuenta_mensual_${selectedPersonaECM.id}_${anioECM}_${mesECM}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      downloadBlob(blob, filename);
+    } catch {
+      setError(`Error al exportar a ${format.toUpperCase()}`);
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
@@ -362,6 +404,7 @@ export default function ReportesPage() {
           <Tab label="Proyeccion de Cobranza" />
           <Tab label="Finiquito" />
           <Tab label="Reporte Mensual" />
+          <Tab label="Estado Cuenta Mensual" />
         </Tabs>
 
         {/* Estado de Cuenta */}
@@ -1156,6 +1199,181 @@ export default function ReportesPage() {
                   </TableContainer>
                 </>
               )}
+            </>
+          )}
+        </TabPanel>
+
+        {/* Estado de Cuenta Mensual */}
+        <TabPanel value={tabValue} index={6}>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={4}>
+              <Autocomplete
+                options={personas}
+                getOptionLabel={(option) => option.nombreCompleto || `${option.nombre} ${option.apellidoPaterno}`}
+                value={selectedPersonaECM}
+                onChange={(_, newValue) => setSelectedPersonaECM(newValue)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Cliente" fullWidth />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <TextField
+                label="Mes"
+                type="number"
+                value={mesECM}
+                onChange={(e) => setMesECM(parseInt(e.target.value))}
+                fullWidth
+                inputProps={{ min: 1, max: 12 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <TextField
+                label="Ano"
+                type="number"
+                value={anioECM}
+                onChange={(e) => setAnioECM(parseInt(e.target.value))}
+                fullWidth
+                inputProps={{ min: 2020, max: 2030 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                variant="contained"
+                onClick={handleGenerarEstadoCuentaMensual}
+                disabled={loading}
+                fullWidth
+                sx={{ height: '56px' }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Generar'}
+              </Button>
+            </Grid>
+          </Grid>
+
+          {estadoCuentaMensual && (
+            <>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <ButtonGroup variant="outlined">
+                  <Button startIcon={<ExcelIcon />} onClick={() => handleExportEstadoCuentaMensual('excel')}>
+                    Excel
+                  </Button>
+                  <Button startIcon={<CsvIcon />} onClick={() => handleExportEstadoCuentaMensual('csv')}>
+                    CSV
+                  </Button>
+                </ButtonGroup>
+              </Box>
+
+              <Typography variant="h5" gutterBottom>{estadoCuentaMensual.periodoDescripcion}</Typography>
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">{estadoCuentaMensual.nombreCliente}</Typography>
+                      <Typography color="text.secondary">RFC: {estadoCuentaMensual.rfc}</Typography>
+                      {estadoCuentaMensual.email && (
+                        <Typography color="text.secondary">Email: {estadoCuentaMensual.email}</Typography>
+                      )}
+                      {estadoCuentaMensual.telefono && (
+                        <Typography color="text.secondary">Tel: {estadoCuentaMensual.telefono}</Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Resumen del Mes</Typography>
+                      <Typography>Saldo Inicial: {formatCurrency(estadoCuentaMensual.saldoInicial)}</Typography>
+                      <Typography>Total Cargos: {formatCurrency(estadoCuentaMensual.totalCargos)}</Typography>
+                      <Typography>Total Abonos: {formatCurrency(estadoCuentaMensual.totalAbonos)}</Typography>
+                      <Typography variant="h6" color="primary">
+                        Saldo Final: {formatCurrency(estadoCuentaMensual.saldoFinal)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Indicadores</Typography>
+                      <Typography color="error">
+                        Saldo Vencido: {formatCurrency(estadoCuentaMensual.saldoVencido)}
+                      </Typography>
+                      <Typography>
+                        Saldo por Vencer: {formatCurrency(estadoCuentaMensual.saldoPorVencer)}
+                      </Typography>
+                      <Typography>
+                        Dias Promedio Vencido: {estadoCuentaMensual.diasPromedioVencido}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {estadoCuentaMensual.propiedades.length > 0 && (
+                <>
+                  <Typography variant="h6" gutterBottom>Resumen por Propiedad</Typography>
+                  <TableContainer component={Paper} sx={{ mb: 3 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Propiedad</TableCell>
+                          <TableCell align="right">Renta Mensual</TableCell>
+                          <TableCell align="right">Cargos del Mes</TableCell>
+                          <TableCell align="right">Pagos del Mes</TableCell>
+                          <TableCell align="right">Saldo Pendiente</TableCell>
+                          <TableCell>Estado</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {estadoCuentaMensual.propiedades.map((prop) => (
+                          <TableRow key={prop.propiedadId}>
+                            <TableCell>{prop.direccion}</TableCell>
+                            <TableCell align="right">{formatCurrency(prop.rentaMensual)}</TableCell>
+                            <TableCell align="right">{formatCurrency(prop.cargosDelMes)}</TableCell>
+                            <TableCell align="right">{formatCurrency(prop.pagosDelMes)}</TableCell>
+                            <TableCell align="right">{formatCurrency(prop.saldoPendiente)}</TableCell>
+                            <TableCell>{prop.estadoPago}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
+              )}
+
+              <Typography variant="h6" gutterBottom>Movimientos del Mes</Typography>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Concepto</TableCell>
+                      <TableCell>Propiedad</TableCell>
+                      <TableCell>Tipo</TableCell>
+                      <TableCell align="right">Cargo</TableCell>
+                      <TableCell align="right">Abono</TableCell>
+                      <TableCell align="right">Saldo</TableCell>
+                      <TableCell>Estado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {estadoCuentaMensual.movimientos.map((mov, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{mov.fecha}</TableCell>
+                        <TableCell>{mov.concepto}</TableCell>
+                        <TableCell>{mov.propiedad}</TableCell>
+                        <TableCell>{mov.tipo}</TableCell>
+                        <TableCell align="right">{formatCurrency(mov.cargo)}</TableCell>
+                        <TableCell align="right">{formatCurrency(mov.abono)}</TableCell>
+                        <TableCell align="right">{formatCurrency(mov.saldoAcumulado)}</TableCell>
+                        <TableCell>{mov.estado}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </>
           )}
         </TabPanel>

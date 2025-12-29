@@ -5,7 +5,8 @@ import type {
   ReporteCarteraVencida,
   ProyeccionCobranzaReporte,
   Finiquito,
-  ReporteMensual
+  ReporteMensual,
+  EstadoCuentaMensual
 } from '../types/reporte';
 
 export const reporteService = {
@@ -173,6 +174,42 @@ export const reporteService = {
 
   exportReporteMensualCsv: async (mes: number, anio: number): Promise<Blob> => {
     const response = await api.get('/api/reportes/mensual/csv', {
+      params: { mes, anio },
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
+  // Estado de Cuenta Mensual por Cliente
+  getEstadoCuentaMensual: async (
+    personaId: number,
+    mes: number,
+    anio: number
+  ): Promise<EstadoCuentaMensual> => {
+    const response = await api.get<EstadoCuentaMensual>(`/api/reportes/estado-cuenta-mensual/${personaId}`, {
+      params: { mes, anio }
+    });
+    return response.data;
+  },
+
+  exportEstadoCuentaMensualExcel: async (
+    personaId: number,
+    mes: number,
+    anio: number
+  ): Promise<Blob> => {
+    const response = await api.get(`/api/reportes/estado-cuenta-mensual/${personaId}/excel`, {
+      params: { mes, anio },
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
+  exportEstadoCuentaMensualCsv: async (
+    personaId: number,
+    mes: number,
+    anio: number
+  ): Promise<Blob> => {
+    const response = await api.get(`/api/reportes/estado-cuenta-mensual/${personaId}/csv`, {
       params: { mes, anio },
       responseType: 'blob'
     });
