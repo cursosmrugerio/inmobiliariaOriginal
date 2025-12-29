@@ -26,7 +26,10 @@ public class CreatePropiedadRequest {
 
     private String numeroExterior;
     private String numeroInterior;
+
+    @NotNull(message = "El estado es requerido")
     private Integer estadoId;
+
     private Integer municipioId;
     private Integer coloniaId;
     private String codigoPostal;

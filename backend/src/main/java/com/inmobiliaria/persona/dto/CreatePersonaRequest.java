@@ -1,6 +1,7 @@
 package com.inmobiliaria.persona.dto;
 
 import com.inmobiliaria.persona.TipoPersona;
+import com.inmobiliaria.persona.validation.AtLeastOneContact;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@AtLeastOneContact
 public class CreatePersonaRequest {
 
     @NotNull(message = "El tipo de persona es requerido")

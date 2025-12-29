@@ -761,6 +761,179 @@ public class ReporteService {
                 .build();
     }
 
+    // ========== ESTADO DE CUENTA MENSUAL POR CLIENTE ==========
+
+    public EstadoCuentaMensualDTO generarEstadoCuentaMensual(Long personaId, Integer mes, Integer anio) {
+        Long empresaId = TenantContext.getCurrentTenant();
+
+        Persona persona = personaRepository.findByIdAndEmpresaId(personaId, empresaId)
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
+
+        YearMonth periodo = YearMonth.of(anio, mes);
+        LocalDate inicioMes = periodo.atDay(1);
+        LocalDate finMes = periodo.atEndOfMonth();
+
+        String periodoDescripcion = periodo.getMonth().getDisplayName(TextStyle.FULL, new Locale("es", "ES"))
+                + " " + anio;
+
+        // Obtener cartera del cliente (todos los registros activos)
+        List<CarteraVencida> carteraTotal = carteraVencidaRepository
+                .findByEmpresaIdAndPersonaIdAndActivoTrue(empresaId, personaId);
+
+        // Calcular saldo inicial (cartera con fecha de vencimiento antes del inicio del mes)
+        BigDecimal saldoInicial = carteraTotal.stream()
+                .filter(c -> c.getFechaVencimiento().isBefore(inicioMes))
+                .map(CarteraVencida::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Filtrar movimientos del mes
+        List<CarteraVencida> carteraDelMes = carteraTotal.stream()
+                .filter(c -> !c.getFechaVencimiento().isBefore(inicioMes) && !c.getFechaVencimiento().isAfter(finMes))
+                .toList();
+
+        // Crear lista de movimientos
+        List<EstadoCuentaMensualDTO.MovimientoMensualDTO> movimientos = new ArrayList<>();
+        BigDecimal saldoAcumulado = saldoInicial;
+        BigDecimal totalCargos = BigDecimal.ZERO;
+        BigDecimal totalAbonos = BigDecimal.ZERO;
+
+        // Ordenar por fecha de vencimiento
+        List<CarteraVencida> carteraOrdenada = carteraDelMes.stream()
+                .sorted(Comparator.comparing(CarteraVencida::getFechaVencimiento))
+                .toList();
+
+        for (CarteraVencida cv : carteraOrdenada) {
+            // Obtener propiedad
+            String direccionPropiedad = propiedadRepository.findByIdAndEmpresaId(cv.getPropiedadId(), empresaId)
+                    .map(Propiedad::getDireccionCompleta)
+                    .orElse("");
+
+            // Agregar cargo
+            saldoAcumulado = saldoAcumulado.add(cv.getMontoOriginal());
+            totalCargos = totalCargos.add(cv.getMontoOriginal());
+
+            movimientos.add(EstadoCuentaMensualDTO.MovimientoMensualDTO.builder()
+                    .fecha(cv.getFechaVencimiento())
+                    .concepto(cv.getConcepto())
+                    .tipo("CARGO")
+                    .cargo(cv.getMontoOriginal())
+                    .abono(BigDecimal.ZERO)
+                    .saldoAcumulado(saldoAcumulado)
+                    .referencia(cv.getId().toString())
+                    .propiedad(direccionPropiedad)
+                    .estado(cv.getEstadoCobranza() != null ? cv.getEstadoCobranza().name() : "PENDIENTE")
+                    .build());
+
+            // Si hay pago (parcial o total)
+            BigDecimal pagado = cv.getMontoOriginal().subtract(cv.getMontoPendiente());
+            if (pagado.compareTo(BigDecimal.ZERO) > 0) {
+                saldoAcumulado = saldoAcumulado.subtract(pagado);
+                totalAbonos = totalAbonos.add(pagado);
+
+                movimientos.add(EstadoCuentaMensualDTO.MovimientoMensualDTO.builder()
+                        .fecha(cv.getUpdatedAt() != null ? cv.getUpdatedAt().toLocalDate() : cv.getFechaVencimiento())
+                        .concepto("Pago - " + cv.getConcepto())
+                        .tipo("ABONO")
+                        .cargo(BigDecimal.ZERO)
+                        .abono(pagado)
+                        .saldoAcumulado(saldoAcumulado)
+                        .referencia(cv.getId().toString())
+                        .propiedad(direccionPropiedad)
+                        .estado("APLICADO")
+                        .build());
+            }
+        }
+
+        // Calcular saldo vencido y por vencer
+        BigDecimal saldoVencido = carteraTotal.stream()
+                .filter(c -> c.getDiasVencido() != null && c.getDiasVencido() > 0)
+                .map(CarteraVencida::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal saldoPorVencer = carteraTotal.stream()
+                .filter(c -> c.getDiasVencido() == null || c.getDiasVencido() <= 0)
+                .map(CarteraVencida::getMontoPendiente)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calcular días promedio vencido
+        int diasPromedioVencido = (int) carteraTotal.stream()
+                .filter(c -> c.getDiasVencido() != null && c.getDiasVencido() > 0)
+                .mapToInt(CarteraVencida::getDiasVencido)
+                .average()
+                .orElse(0);
+
+        // Agrupar por propiedad
+        Map<Long, List<CarteraVencida>> porPropiedad = carteraDelMes.stream()
+                .collect(Collectors.groupingBy(CarteraVencida::getPropiedadId));
+
+        List<EstadoCuentaMensualDTO.PropiedadResumenDTO> propiedadesResumen = new ArrayList<>();
+        for (Map.Entry<Long, List<CarteraVencida>> entry : porPropiedad.entrySet()) {
+            Long propiedadId = entry.getKey();
+            List<CarteraVencida> carteraProp = entry.getValue();
+
+            Propiedad prop = propiedadRepository.findByIdAndEmpresaId(propiedadId, empresaId).orElse(null);
+            String direccion = prop != null ? prop.getDireccionCompleta() : "";
+            BigDecimal rentaMensual = prop != null ? prop.getRentaMensual() : BigDecimal.ZERO;
+
+            BigDecimal cargosDelMes = carteraProp.stream()
+                    .map(CarteraVencida::getMontoOriginal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal pagosDelMes = carteraProp.stream()
+                    .map(c -> c.getMontoOriginal().subtract(c.getMontoPendiente()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal saldoPendiente = carteraProp.stream()
+                    .map(CarteraVencida::getMontoPendiente)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String estadoPago = saldoPendiente.compareTo(BigDecimal.ZERO) <= 0 ? "AL_CORRIENTE" : "PENDIENTE";
+
+            propiedadesResumen.add(EstadoCuentaMensualDTO.PropiedadResumenDTO.builder()
+                    .propiedadId(propiedadId)
+                    .direccion(direccion)
+                    .rentaMensual(rentaMensual != null ? rentaMensual : BigDecimal.ZERO)
+                    .cargosDelMes(cargosDelMes)
+                    .pagosDelMes(pagosDelMes)
+                    .saldoPendiente(saldoPendiente)
+                    .estadoPago(estadoPago)
+                    .build());
+        }
+
+        // Obtener dirección del cliente
+        String direccionCliente = persona.getDirecciones().stream()
+                .findFirst()
+                .map(d -> d.getCalle() + " " + d.getNumeroExterior())
+                .orElse("");
+
+        BigDecimal saldoFinal = saldoInicial.add(totalCargos).subtract(totalAbonos);
+
+        return EstadoCuentaMensualDTO.builder()
+                .personaId(personaId)
+                .nombreCliente(persona.getNombreCompleto())
+                .tipoPersona(persona.getTipoPersona().name())
+                .rfc(persona.getRfc())
+                .email(persona.getEmail())
+                .telefono(persona.getTelefono())
+                .direccion(direccionCliente)
+                .empresaId(empresaId)
+                .nombreEmpresa(getNombreEmpresa(empresaId))
+                .mes(mes)
+                .anio(anio)
+                .periodoDescripcion(periodoDescripcion)
+                .fechaGeneracion(LocalDate.now())
+                .saldoInicial(saldoInicial)
+                .totalCargos(totalCargos)
+                .totalAbonos(totalAbonos)
+                .saldoFinal(saldoFinal)
+                .saldoVencido(saldoVencido)
+                .saldoPorVencer(saldoPorVencer)
+                .diasPromedioVencido(diasPromedioVencido)
+                .movimientos(movimientos)
+                .propiedades(propiedadesResumen)
+                .build();
+    }
+
     // ========== PROYECCIÓN CON FILTROS AVANZADOS ==========
 
     public ProyeccionCobranzaReporteDTO generarReporteProyeccionConFiltros(

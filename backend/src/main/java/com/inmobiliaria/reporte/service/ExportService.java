@@ -593,4 +593,90 @@ public class ExportService {
 
         return csv.toString().getBytes();
     }
+
+    // ========== ESTADO DE CUENTA MENSUAL EXPORTS ==========
+
+    public byte[] exportEstadoCuentaMensualExcel(EstadoCuentaMensualDTO estadoCuenta) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Estado de Cuenta Mensual");
+
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            int rowNum = 0;
+
+            // Título
+            Row titleRow = sheet.createRow(rowNum++);
+            titleRow.createCell(0).setCellValue("ESTADO DE CUENTA MENSUAL - " + estadoCuenta.getPeriodoDescripcion().toUpperCase());
+
+            rowNum++;
+
+            // Información del cliente
+            createLabelValueRow(sheet, rowNum++, "Cliente:", estadoCuenta.getNombreCliente());
+            createLabelValueRow(sheet, rowNum++, "RFC:", estadoCuenta.getRfc());
+            createLabelValueRow(sheet, rowNum++, "Email:", estadoCuenta.getEmail() != null ? estadoCuenta.getEmail() : "");
+            createLabelValueRow(sheet, rowNum++, "Teléfono:", estadoCuenta.getTelefono() != null ? estadoCuenta.getTelefono() : "");
+            createLabelValueRow(sheet, rowNum++, "Fecha de generación:", estadoCuenta.getFechaGeneracion().format(DATE_FORMATTER));
+
+            rowNum++;
+
+            // Resumen del mes
+            createLabelValueRow(sheet, rowNum++, "Saldo Inicial:", formatMoney(estadoCuenta.getSaldoInicial()));
+            createLabelValueRow(sheet, rowNum++, "Total Cargos:", formatMoney(estadoCuenta.getTotalCargos()));
+            createLabelValueRow(sheet, rowNum++, "Total Abonos:", formatMoney(estadoCuenta.getTotalAbonos()));
+            createLabelValueRow(sheet, rowNum++, "Saldo Final:", formatMoney(estadoCuenta.getSaldoFinal()));
+            createLabelValueRow(sheet, rowNum++, "Saldo Vencido:", formatMoney(estadoCuenta.getSaldoVencido()));
+            createLabelValueRow(sheet, rowNum++, "Saldo Por Vencer:", formatMoney(estadoCuenta.getSaldoPorVencer()));
+            createLabelValueRow(sheet, rowNum++, "Días Promedio Vencido:", String.valueOf(estadoCuenta.getDiasPromedioVencido()));
+
+            rowNum++;
+
+            // Headers de movimientos
+            Row headerRow = sheet.createRow(rowNum++);
+            String[] headers = {"Fecha", "Concepto", "Tipo", "Cargo", "Abono", "Saldo", "Propiedad", "Estado"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Datos de movimientos
+            for (EstadoCuentaMensualDTO.MovimientoMensualDTO item : estadoCuenta.getMovimientos()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(item.getFecha() != null ? item.getFecha().format(DATE_FORMATTER) : "");
+                row.createCell(1).setCellValue(item.getConcepto());
+                row.createCell(2).setCellValue(item.getTipo());
+                row.createCell(3).setCellValue(item.getCargo() != null ? item.getCargo().doubleValue() : 0);
+                row.createCell(4).setCellValue(item.getAbono() != null ? item.getAbono().doubleValue() : 0);
+                row.createCell(5).setCellValue(item.getSaldoAcumulado() != null ? item.getSaldoAcumulado().doubleValue() : 0);
+                row.createCell(6).setCellValue(item.getPropiedad() != null ? item.getPropiedad() : "");
+                row.createCell(7).setCellValue(item.getEstado() != null ? item.getEstado() : "");
+            }
+
+            // Autosize columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    public byte[] exportEstadoCuentaMensualCsv(EstadoCuentaMensualDTO estadoCuenta) {
+        StringBuilder csv = new StringBuilder();
+        csv.append("Fecha,Concepto,Tipo,Cargo,Abono,Saldo,Propiedad,Estado\n");
+
+        for (EstadoCuentaMensualDTO.MovimientoMensualDTO item : estadoCuenta.getMovimientos()) {
+            csv.append(String.format("%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    item.getFecha() != null ? item.getFecha().format(DATE_FORMATTER) : "",
+                    escapeCsv(item.getConcepto()),
+                    item.getTipo(),
+                    item.getCargo(),
+                    item.getAbono(),
+                    item.getSaldoAcumulado(),
+                    escapeCsv(item.getPropiedad() != null ? item.getPropiedad() : ""),
+                    item.getEstado() != null ? item.getEstado() : ""));
+        }
+
+        return csv.toString().getBytes();
+    }
 }

@@ -237,6 +237,48 @@ public class ReporteController {
                 .body(csvData);
     }
 
+    // ========== ESTADO DE CUENTA MENSUAL POR CLIENTE ==========
+
+    @GetMapping("/estado-cuenta-mensual/{personaId}")
+    public ResponseEntity<EstadoCuentaMensualDTO> getEstadoCuentaMensual(
+            @PathVariable Long personaId,
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) {
+        return ResponseEntity.ok(reporteService.generarEstadoCuentaMensual(personaId, mes, anio));
+    }
+
+    @GetMapping("/estado-cuenta-mensual/{personaId}/excel")
+    public ResponseEntity<byte[]> exportEstadoCuentaMensualExcel(
+            @PathVariable Long personaId,
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) throws IOException {
+        EstadoCuentaMensualDTO estadoCuenta = reporteService.generarEstadoCuentaMensual(personaId, mes, anio);
+        byte[] excelData = exportService.exportEstadoCuentaMensualExcel(estadoCuenta);
+
+        String filename = "estado_cuenta_mensual_" + personaId + "_" + anio + "_" + String.format("%02d", mes) + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
+    }
+
+    @GetMapping("/estado-cuenta-mensual/{personaId}/csv")
+    public ResponseEntity<byte[]> exportEstadoCuentaMensualCsv(
+            @PathVariable Long personaId,
+            @RequestParam Integer mes,
+            @RequestParam Integer anio) {
+        EstadoCuentaMensualDTO estadoCuenta = reporteService.generarEstadoCuentaMensual(personaId, mes, anio);
+        byte[] csvData = exportService.exportEstadoCuentaMensualCsv(estadoCuenta);
+
+        String filename = "estado_cuenta_mensual_" + personaId + "_" + anio + "_" + String.format("%02d", mes) + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csvData);
+    }
+
     // ========== REPORTE MENSUAL ==========
 
     @GetMapping("/mensual")
