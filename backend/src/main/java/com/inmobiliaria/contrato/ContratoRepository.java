@@ -44,4 +44,18 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     @Query("SELECT COUNT(c) FROM Contrato c WHERE c.empresaId = :empresaId AND c.estado = :estado")
     long countByEmpresaIdAndEstado(@Param("empresaId") Long empresaId,
                                    @Param("estado") EstadoContrato estado);
+
+    @Query("SELECT c FROM Contrato c WHERE c.empresaId = :empresaId " +
+           "AND c.activo = true " +
+           "AND (:propiedadId IS NULL OR c.propiedad.id = :propiedadId) " +
+           "AND (:arrendatarioId IS NULL OR c.arrendatario.id = :arrendatarioId) " +
+           "AND (:estado IS NULL OR c.estado = :estado) " +
+           "AND c.fechaInicio <= :fechaFin AND c.fechaFin >= :fechaInicio")
+    List<Contrato> findContratosParaProyeccion(
+            @Param("empresaId") Long empresaId,
+            @Param("propiedadId") Long propiedadId,
+            @Param("arrendatarioId") Long arrendatarioId,
+            @Param("estado") EstadoContrato estado,
+            @Param("fechaInicio") LocalDate fechaInicio,
+            @Param("fechaFin") LocalDate fechaFin);
 }

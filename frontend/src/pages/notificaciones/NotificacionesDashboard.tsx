@@ -68,7 +68,7 @@ const NotificacionesDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [configuraciones, setConfiguraciones] = useState<ConfiguracionNotificacion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<ConfiguracionNotificacion | null>(null);

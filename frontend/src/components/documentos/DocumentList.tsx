@@ -41,7 +41,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   documentos,
   onDocumentDeleted,
   onDocumentUpdated,
-  loading,
+  loading: _loading,
 }) => {
   const [editDialog, setEditDialog] = useState<{ open: boolean; documento: Documento | null }>({
     open: false,

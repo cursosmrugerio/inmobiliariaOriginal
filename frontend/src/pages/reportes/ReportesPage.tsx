@@ -20,16 +20,19 @@ import {
   Alert,
   Autocomplete,
   ButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
-  Download as DownloadIcon,
-  PictureAsPdf as PdfIcon,
   TableChart as ExcelIcon,
   Description as CsvIcon,
 } from '@mui/icons-material';
 import { reporteService, downloadBlob } from '../../services/reporteService';
 import { personaService } from '../../services/personaService';
 import { contratoService } from '../../services/contratoService';
+import { propiedadService } from '../../services/propiedadService';
 import type {
   EstadoCuenta,
   AntiguedadSaldos,
@@ -39,7 +42,8 @@ import type {
   ReporteMensual,
 } from '../../types/reporte';
 import type { Persona } from '../../types/persona';
-import type { Contrato } from '../../types/contrato';
+import type { Contrato, EstadoContrato } from '../../types/contrato';
+import type { Propiedad } from '../../types/propiedad';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -79,6 +83,10 @@ export default function ReportesPage() {
   const [proyeccion, setProyeccion] = useState<ProyeccionCobranzaReporte | null>(null);
   const [periodoInicio, setPeriodoInicio] = useState('');
   const [periodoFin, setPeriodoFin] = useState('');
+  const [propiedades, setPropiedades] = useState<Propiedad[]>([]);
+  const [filtroPropiedad, setFiltroPropiedad] = useState<Propiedad | null>(null);
+  const [filtroArrendatario, setFiltroArrendatario] = useState<Persona | null>(null);
+  const [filtroEstado, setFiltroEstado] = useState<EstadoContrato | ''>('');
 
   // Finiquito
   const [contratos, setContratos] = useState<Contrato[]>([]);
@@ -93,6 +101,7 @@ export default function ReportesPage() {
   useEffect(() => {
     loadPersonas();
     loadContratos();
+    loadPropiedades();
   }, []);
 
   const loadPersonas = async () => {
@@ -110,6 +119,15 @@ export default function ReportesPage() {
       setContratos(data);
     } catch {
       console.error('Error loading contratos');
+    }
+  };
+
+  const loadPropiedades = async () => {
+    try {
+      const data = await propiedadService.getAll();
+      setPropiedades(data);
+    } catch {
+      console.error('Error loading propiedades');
     }
   };
 
@@ -221,7 +239,13 @@ export default function ReportesPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await reporteService.getProyeccion(periodoInicio, periodoFin);
+      const data = await reporteService.getProyeccion(
+        periodoInicio,
+        periodoFin,
+        filtroPropiedad?.id,
+        filtroArrendatario?.id,
+        filtroEstado || undefined
+      );
       setProyeccion(data);
     } catch {
       setError('Error al generar reporte de proyeccion');
@@ -234,13 +258,31 @@ export default function ReportesPage() {
     if (!periodoInicio || !periodoFin) return;
     try {
       const blob = format === 'excel'
-        ? await reporteService.exportProyeccionExcel(periodoInicio, periodoFin)
-        : await reporteService.exportProyeccionCsv(periodoInicio, periodoFin);
+        ? await reporteService.exportProyeccionExcel(
+            periodoInicio,
+            periodoFin,
+            filtroPropiedad?.id,
+            filtroArrendatario?.id,
+            filtroEstado || undefined
+          )
+        : await reporteService.exportProyeccionCsv(
+            periodoInicio,
+            periodoFin,
+            filtroPropiedad?.id,
+            filtroArrendatario?.id,
+            filtroEstado || undefined
+          );
       const filename = `proyeccion_cobranza.${format === 'excel' ? 'xlsx' : 'csv'}`;
       downloadBlob(blob, filename);
     } catch {
       setError(`Error al exportar a ${format.toUpperCase()}`);
     }
+  };
+
+  const handleLimpiarFiltrosProyeccion = () => {
+    setFiltroPropiedad(null);
+    setFiltroArrendatario(null);
+    setFiltroEstado('');
   };
 
   // Finiquito handlers
@@ -676,8 +718,11 @@ export default function ReportesPage() {
 
         {/* Proyeccion de Cobranza */}
         <TabPanel value={tabValue} index={3}>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Periodo
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={3}>
               <TextField
                 label="Periodo Inicio"
                 type="date"
@@ -687,7 +732,7 @@ export default function ReportesPage() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <TextField
                 label="Periodo Fin"
                 type="date"
@@ -696,6 +741,50 @@ export default function ReportesPage() {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               />
+            </Grid>
+          </Grid>
+
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Filtros Avanzados (opcional)
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={3}>
+              <Autocomplete
+                options={propiedades}
+                value={filtroPropiedad}
+                onChange={(_, newValue) => setFiltroPropiedad(newValue)}
+                getOptionLabel={(option) => option.nombre}
+                renderInput={(params) => (
+                  <TextField {...params} label="Propiedad" />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Autocomplete
+                options={personas}
+                value={filtroArrendatario}
+                onChange={(_, newValue) => setFiltroArrendatario(newValue)}
+                getOptionLabel={(option) => option.nombreCompleto}
+                renderInput={(params) => (
+                  <TextField {...params} label="Arrendatario" />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth>
+                <InputLabel>Estado Contrato</InputLabel>
+                <Select
+                  value={filtroEstado}
+                  label="Estado Contrato"
+                  onChange={(e) => setFiltroEstado(e.target.value as EstadoContrato | '')}
+                >
+                  <MenuItem value="">Todos</MenuItem>
+                  <MenuItem value="ACTIVO">Activo</MenuItem>
+                  <MenuItem value="POR_VENCER">Por Vencer</MenuItem>
+                  <MenuItem value="VENCIDO">Vencido</MenuItem>
+                  <MenuItem value="BORRADOR">Borrador</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
               <Button
@@ -706,6 +795,16 @@ export default function ReportesPage() {
                 sx={{ height: '56px' }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Generar'}
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                variant="outlined"
+                onClick={handleLimpiarFiltrosProyeccion}
+                fullWidth
+                sx={{ height: '56px' }}
+              >
+                Limpiar Filtros
               </Button>
             </Grid>
           </Grid>

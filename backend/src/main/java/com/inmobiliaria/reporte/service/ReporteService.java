@@ -760,4 +760,122 @@ public class ReporteService {
                 .topMorosos(topMorosos)
                 .build();
     }
+
+    // ========== PROYECCIÓN CON FILTROS AVANZADOS ==========
+
+    public ProyeccionCobranzaReporteDTO generarReporteProyeccionConFiltros(
+            LocalDate periodoInicio,
+            LocalDate periodoFin,
+            Long propiedadId,
+            Long arrendatarioId,
+            EstadoContrato estadoContrato) {
+
+        Long empresaId = TenantContext.getCurrentTenant();
+
+        // Obtener contratos filtrados
+        List<Contrato> contratos = contratoRepository.findContratosParaProyeccion(
+                empresaId, propiedadId, arrendatarioId, estadoContrato, periodoInicio, periodoFin);
+
+        List<ProyeccionCobranzaReporteDTO.ProyeccionMesDTO> detalleMensual = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy", new Locale("es", "ES"));
+
+        BigDecimal totalProyectado = BigDecimal.ZERO;
+        BigDecimal totalCobrado = BigDecimal.ZERO;
+        int totalPagosEsperados = 0;
+        int totalPagosRecibidos = 0;
+
+        // Agrupar por mes
+        YearMonth mesInicio = YearMonth.from(periodoInicio);
+        YearMonth mesFin = YearMonth.from(periodoFin);
+
+        YearMonth mesActual = mesInicio;
+        while (!mesActual.isAfter(mesFin)) {
+            LocalDate inicioMes = mesActual.atDay(1);
+            LocalDate finMes = mesActual.atEndOfMonth();
+
+            BigDecimal montoProyectadoMes = BigDecimal.ZERO;
+            BigDecimal montoCobradoMes = BigDecimal.ZERO;
+            int pagosEsperadosMes = 0;
+            int pagosRecibidosMes = 0;
+            int contratosEnMes = 0;
+
+            for (Contrato contrato : contratos) {
+                // Verificar si el contrato está vigente en este mes
+                if (!contrato.getFechaInicio().isAfter(finMes) && !contrato.getFechaFin().isBefore(inicioMes)) {
+                    contratosEnMes++;
+                    pagosEsperadosMes++;
+
+                    // Agregar renta mensual proyectada
+                    if (contrato.getMontoRenta() != null) {
+                        montoProyectadoMes = montoProyectadoMes.add(contrato.getMontoRenta());
+                    }
+
+                    // Buscar pagos realizados en este mes para este contrato
+                    List<Pago> pagosDelMes = pagoRepository.findByContratoIdAndEmpresaId(contrato.getId(), empresaId)
+                            .stream()
+                            .filter(p -> p.getFechaPago() != null &&
+                                    !p.getFechaPago().isBefore(inicioMes) &&
+                                    !p.getFechaPago().isAfter(finMes))
+                            .toList();
+
+                    if (!pagosDelMes.isEmpty()) {
+                        pagosRecibidosMes++;
+                        for (Pago pago : pagosDelMes) {
+                            if (pago.getMontoAplicado() != null) {
+                                montoCobradoMes = montoCobradoMes.add(pago.getMontoAplicado());
+                            }
+                        }
+                    }
+                }
+            }
+
+            BigDecimal diferencia = montoProyectadoMes.subtract(montoCobradoMes);
+            BigDecimal porcentaje = BigDecimal.ZERO;
+            if (montoProyectadoMes.compareTo(BigDecimal.ZERO) > 0) {
+                porcentaje = montoCobradoMes.multiply(BigDecimal.valueOf(100))
+                        .divide(montoProyectadoMes, 2, RoundingMode.HALF_UP);
+            }
+
+            detalleMensual.add(ProyeccionCobranzaReporteDTO.ProyeccionMesDTO.builder()
+                    .periodo(inicioMes)
+                    .mesAnio(inicioMes.format(formatter))
+                    .montoProyectado(montoProyectadoMes)
+                    .montoCobrado(montoCobradoMes)
+                    .diferencia(diferencia)
+                    .porcentajeCumplimiento(porcentaje)
+                    .cantidadContratos(contratosEnMes)
+                    .pagosEsperados(pagosEsperadosMes)
+                    .pagosRecibidos(pagosRecibidosMes)
+                    .build());
+
+            totalProyectado = totalProyectado.add(montoProyectadoMes);
+            totalCobrado = totalCobrado.add(montoCobradoMes);
+            totalPagosEsperados += pagosEsperadosMes;
+            totalPagosRecibidos += pagosRecibidosMes;
+
+            mesActual = mesActual.plusMonths(1);
+        }
+
+        BigDecimal porcentajeCumplimiento = BigDecimal.ZERO;
+        if (totalProyectado.compareTo(BigDecimal.ZERO) > 0) {
+            porcentajeCumplimiento = totalCobrado.multiply(BigDecimal.valueOf(100))
+                    .divide(totalProyectado, 2, RoundingMode.HALF_UP);
+        }
+
+        return ProyeccionCobranzaReporteDTO.builder()
+                .empresaId(empresaId)
+                .nombreEmpresa(getNombreEmpresa(empresaId))
+                .periodoInicio(periodoInicio)
+                .periodoFin(periodoFin)
+                .fechaGeneracion(LocalDate.now())
+                .totalProyectado(totalProyectado)
+                .totalCobrado(totalCobrado)
+                .totalPendiente(totalProyectado.subtract(totalCobrado))
+                .porcentajeCumplimiento(porcentajeCumplimiento)
+                .totalContratosActivos(contratos.size())
+                .totalPagosEsperados(totalPagosEsperados)
+                .totalPagosRecibidos(totalPagosRecibidos)
+                .detalleMensual(detalleMensual)
+                .build();
+    }
 }

@@ -17,15 +17,13 @@ import {
   Alert,
   CircularProgress,
   Tabs,
-  Tab,
-  LinearProgress
+  Tab
 } from '@mui/material';
 import {
   AccountBalance,
   Warning,
   TrendingUp,
-  Assignment,
-  Phone
+  Assignment
 } from '@mui/icons-material';
 import { cobranzaService } from '../../services/cobranzaService';
 import type {

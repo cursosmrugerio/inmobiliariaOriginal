@@ -96,25 +96,40 @@ export const reporteService = {
   // Proyeccion de Cobranza
   getProyeccion: async (
     periodoInicio: string,
-    periodoFin: string
+    periodoFin: string,
+    propiedadId?: number,
+    arrendatarioId?: number,
+    estadoContrato?: string
   ): Promise<ProyeccionCobranzaReporte> => {
     const response = await api.get<ProyeccionCobranzaReporte>('/api/reportes/proyeccion', {
-      params: { periodoInicio, periodoFin }
+      params: { periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato }
     });
     return response.data;
   },
 
-  exportProyeccionExcel: async (periodoInicio: string, periodoFin: string): Promise<Blob> => {
+  exportProyeccionExcel: async (
+    periodoInicio: string,
+    periodoFin: string,
+    propiedadId?: number,
+    arrendatarioId?: number,
+    estadoContrato?: string
+  ): Promise<Blob> => {
     const response = await api.get('/api/reportes/proyeccion/excel', {
-      params: { periodoInicio, periodoFin },
+      params: { periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato },
       responseType: 'blob'
     });
     return response.data;
   },
 
-  exportProyeccionCsv: async (periodoInicio: string, periodoFin: string): Promise<Blob> => {
+  exportProyeccionCsv: async (
+    periodoInicio: string,
+    periodoFin: string,
+    propiedadId?: number,
+    arrendatarioId?: number,
+    estadoContrato?: string
+  ): Promise<Blob> => {
     const response = await api.get('/api/reportes/proyeccion/csv', {
-      params: { periodoInicio, periodoFin },
+      params: { periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato },
       responseType: 'blob'
     });
     return response.data;

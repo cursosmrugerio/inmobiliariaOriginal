@@ -1,5 +1,6 @@
 package com.inmobiliaria.reporte.controller;
 
+import com.inmobiliaria.contrato.EstadoContrato;
 import com.inmobiliaria.reporte.dto.*;
 import com.inmobiliaria.reporte.service.ExportService;
 import com.inmobiliaria.reporte.service.ReporteService;
@@ -143,15 +144,32 @@ public class ReporteController {
     @GetMapping("/proyeccion")
     public ResponseEntity<ProyeccionCobranzaReporteDTO> getProyeccion(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin,
+            @RequestParam(required = false) Long propiedadId,
+            @RequestParam(required = false) Long arrendatarioId,
+            @RequestParam(required = false) EstadoContrato estadoContrato) {
+        // Use filtered method if any filter is provided
+        if (propiedadId != null || arrendatarioId != null || estadoContrato != null) {
+            return ResponseEntity.ok(reporteService.generarReporteProyeccionConFiltros(
+                    periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato));
+        }
         return ResponseEntity.ok(reporteService.generarReporteProyeccion(periodoInicio, periodoFin));
     }
 
     @GetMapping("/proyeccion/excel")
     public ResponseEntity<byte[]> exportProyeccionExcel(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin) throws IOException {
-        ProyeccionCobranzaReporteDTO proyeccion = reporteService.generarReporteProyeccion(periodoInicio, periodoFin);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin,
+            @RequestParam(required = false) Long propiedadId,
+            @RequestParam(required = false) Long arrendatarioId,
+            @RequestParam(required = false) EstadoContrato estadoContrato) throws IOException {
+        ProyeccionCobranzaReporteDTO proyeccion;
+        if (propiedadId != null || arrendatarioId != null || estadoContrato != null) {
+            proyeccion = reporteService.generarReporteProyeccionConFiltros(
+                    periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato);
+        } else {
+            proyeccion = reporteService.generarReporteProyeccion(periodoInicio, periodoFin);
+        }
         byte[] excelData = exportService.exportProyeccionExcel(proyeccion);
 
         String filename = "proyeccion_cobranza_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".xlsx";
@@ -165,8 +183,17 @@ public class ReporteController {
     @GetMapping("/proyeccion/csv")
     public ResponseEntity<byte[]> exportProyeccionCsv(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin) {
-        ProyeccionCobranzaReporteDTO proyeccion = reporteService.generarReporteProyeccion(periodoInicio, periodoFin);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodoFin,
+            @RequestParam(required = false) Long propiedadId,
+            @RequestParam(required = false) Long arrendatarioId,
+            @RequestParam(required = false) EstadoContrato estadoContrato) {
+        ProyeccionCobranzaReporteDTO proyeccion;
+        if (propiedadId != null || arrendatarioId != null || estadoContrato != null) {
+            proyeccion = reporteService.generarReporteProyeccionConFiltros(
+                    periodoInicio, periodoFin, propiedadId, arrendatarioId, estadoContrato);
+        } else {
+            proyeccion = reporteService.generarReporteProyeccion(periodoInicio, periodoFin);
+        }
         byte[] csvData = exportService.exportProyeccionCsv(proyeccion);
 
         String filename = "proyeccion_cobranza_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".csv";

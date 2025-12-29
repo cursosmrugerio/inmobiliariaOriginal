@@ -168,26 +168,26 @@ export default function PropiedadDetail() {
 
       <Grid container spacing={3}>
         {/* Información General */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Información General</Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Tipo</Typography>
                 <Typography variant="body1">
                   <Chip label={propiedad.tipoPropiedadNombre} size="small" color="primary" variant="outlined" />
                 </Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Clave Catastral</Typography>
                 <Typography variant="body1">{propiedad.claveCatastral || '-'}</Typography>
               </Grid>
-              <Grid size={{ xs: 12 }}>
+              <Grid item xs={12}>
                 <Typography variant="body2" color="text.secondary">Dirección</Typography>
                 <Typography variant="body1">{propiedad.direccionCompleta || '-'}</Typography>
               </Grid>
               {propiedad.referencias && (
-                <Grid size={{ xs: 12 }}>
+                <Grid item xs={12}>
                   <Typography variant="body2" color="text.secondary">Referencias</Typography>
                   <Typography variant="body1">{propiedad.referencias}</Typography>
                 </Grid>
@@ -197,19 +197,19 @@ export default function PropiedadDetail() {
         </Grid>
 
         {/* Valores */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Valores</Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Renta Mensual</Typography>
                 <Typography variant="h5" color="primary">{formatCurrency(propiedad.rentaMensual)}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Valor Comercial</Typography>
                 <Typography variant="body1">{formatCurrency(propiedad.valorComercial)}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Valor Catastral</Typography>
                 <Typography variant="body1">{formatCurrency(propiedad.valorCatastral)}</Typography>
               </Grid>
@@ -218,35 +218,35 @@ export default function PropiedadDetail() {
         </Grid>
 
         {/* Características */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Características</Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Superficie Terreno</Typography>
                 <Typography variant="body1">{formatNumber(propiedad.superficieTerreno, ' m²')}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Superficie Construcción</Typography>
                 <Typography variant="body1">{formatNumber(propiedad.superficieConstruccion, ' m²')}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Recámaras</Typography>
                 <Typography variant="body1">{propiedad.numRecamaras || '-'}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Baños</Typography>
                 <Typography variant="body1">{propiedad.numBanos || '-'}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Estacionamientos</Typography>
                 <Typography variant="body1">{propiedad.numEstacionamientos || '-'}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Pisos</Typography>
                 <Typography variant="body1">{propiedad.numPisos || '-'}</Typography>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Año Construcción</Typography>
                 <Typography variant="body1">{propiedad.anioConstruccion || '-'}</Typography>
               </Grid>
@@ -255,7 +255,7 @@ export default function PropiedadDetail() {
         </Grid>
 
         {/* Propietarios */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Propietarios</Typography>
             {propiedad.propietarios && propiedad.propietarios.length > 0 ? (
@@ -293,7 +293,7 @@ export default function PropiedadDetail() {
 
         {/* Notas */}
         {propiedad.notas && (
-          <Grid size={{ xs: 12 }}>
+          <Grid item xs={12}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Notas</Typography>
               <Typography variant="body1">{propiedad.notas}</Typography>
@@ -302,7 +302,7 @@ export default function PropiedadDetail() {
         )}
 
         {/* Contratos de esta Propiedad */}
-        <Grid size={{ xs: 12 }}>
+        <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Contratos</Typography>
             <Divider sx={{ mb: 2 }} />

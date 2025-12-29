@@ -195,7 +195,7 @@ export default function PropiedadForm() {
         <form onSubmit={handleSubmit}>
           <Typography variant="h6" gutterBottom>Información General</Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel>Tipo de Propiedad</InputLabel>
                 <Select
@@ -209,7 +209,7 @@ export default function PropiedadForm() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 required
@@ -219,7 +219,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Clave Catastral"
@@ -233,7 +233,7 @@ export default function PropiedadForm() {
           <Divider sx={{ my: 3 }} />
           <Typography variant="h6" gutterBottom>Dirección</Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 required
@@ -243,7 +243,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 label="Número Exterior"
@@ -252,7 +252,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 label="Número Interior"
@@ -261,7 +261,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 label="Código Postal"
@@ -270,7 +270,7 @@ export default function PropiedadForm() {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 9 }}>
+            <Grid item xs={12} sm={9}>
               <TextField
                 fullWidth
                 label="Referencias"
@@ -284,7 +284,7 @@ export default function PropiedadForm() {
           <Divider sx={{ my: 3 }} />
           <Typography variant="h6" gutterBottom>Características</Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -297,7 +297,7 @@ export default function PropiedadForm() {
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -310,7 +310,7 @@ export default function PropiedadForm() {
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -320,7 +320,7 @@ export default function PropiedadForm() {
                 onChange={handleNumberChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 type="number"
@@ -330,7 +330,7 @@ export default function PropiedadForm() {
                 onChange={handleNumberChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 type="number"
@@ -341,7 +341,7 @@ export default function PropiedadForm() {
                 inputProps={{ step: 0.5 }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 type="number"
@@ -351,7 +351,7 @@ export default function PropiedadForm() {
                 onChange={handleNumberChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 type="number"
@@ -366,7 +366,7 @@ export default function PropiedadForm() {
           <Divider sx={{ my: 3 }} />
           <Typography variant="h6" gutterBottom>Valores</Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -379,7 +379,7 @@ export default function PropiedadForm() {
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -392,7 +392,7 @@ export default function PropiedadForm() {
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 type="number"
@@ -409,7 +409,7 @@ export default function PropiedadForm() {
 
           <Divider sx={{ my: 3 }} />
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 multiline
