@@ -9,6 +9,8 @@ import com.inmobiliaria.cobranza.repository.SeguimientoCobranzaRepository;
 import com.inmobiliaria.contrato.Contrato;
 import com.inmobiliaria.contrato.ContratoRepository;
 import com.inmobiliaria.contrato.EstadoContrato;
+import com.inmobiliaria.empresa.Empresa;
+import com.inmobiliaria.empresa.EmpresaRepository;
 import com.inmobiliaria.pago.Cargo;
 import com.inmobiliaria.pago.CargoRepository;
 import com.inmobiliaria.pago.Pago;
@@ -45,6 +47,13 @@ public class ReporteService {
     private final ContratoRepository contratoRepository;
     private final PagoRepository pagoRepository;
     private final CargoRepository cargoRepository;
+    private final EmpresaRepository empresaRepository;
+
+    private String getNombreEmpresa(Long empresaId) {
+        return empresaRepository.findById(empresaId)
+                .map(Empresa::getNombre)
+                .orElse("Inmobiliaria");
+    }
 
     // ========== ESTADO DE CUENTA (#39) ==========
 
@@ -147,7 +156,7 @@ public class ReporteService {
                 .telefono(persona.getTelefono())
                 .direccion(direccion)
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria") // TODO: Get from empresa entity
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .fechaInicio(fechaInicio)
                 .fechaFin(fechaFin)
                 .fechaGeneracion(LocalDate.now())
@@ -245,7 +254,7 @@ public class ReporteService {
 
         return AntiguedadSaldosDTO.builder()
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria")
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .fechaCorte(fechaCorte)
                 .fechaGeneracion(LocalDate.now())
                 .totalVigente(totalVigente)
@@ -346,7 +355,7 @@ public class ReporteService {
 
         return ReporteCarteraVencidaDTO.builder()
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria")
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .fechaCorte(fechaCorte)
                 .fechaGeneracion(LocalDate.now())
                 .totalCartera(totalCartera)
@@ -435,7 +444,7 @@ public class ReporteService {
 
         return ProyeccionCobranzaReporteDTO.builder()
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria")
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .periodoInicio(periodoInicio)
                 .periodoFin(periodoFin)
                 .fechaGeneracion(LocalDate.now())
@@ -549,7 +558,7 @@ public class ReporteService {
                 .contratoId(contratoId)
                 .numeroContrato(contrato.getNumeroContrato())
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria")
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .arrendatarioId(arrendatario.getId())
                 .nombreArrendatario(arrendatario.getNombreCompleto())
                 .rfcArrendatario(arrendatario.getRfc())
@@ -720,7 +729,7 @@ public class ReporteService {
 
         return ReporteMensualDTO.builder()
                 .empresaId(empresaId)
-                .nombreEmpresa("Inmobiliaria")
+                .nombreEmpresa(getNombreEmpresa(empresaId))
                 .mes(mes)
                 .anio(anio)
                 .periodoDescripcion(periodoDescripcion)
