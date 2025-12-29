@@ -7,6 +7,7 @@ import com.inmobiliaria.notificacion.service.NotificacionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notificaciones")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'AGENTE')")
 public class NotificacionController {
 
     private final NotificacionService notificacionService;
@@ -54,8 +56,9 @@ public class NotificacionController {
         return ResponseEntity.ok().build();
     }
 
-    // Configuración endpoints
+    // Configuración endpoints - Solo ADMINISTRADOR
     @GetMapping("/configuracion")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<List<ConfiguracionNotificacionDTO>> findAllConfiguraciones() {
         return ResponseEntity.ok(notificacionService.findAllConfiguraciones());
     }
@@ -71,6 +74,7 @@ public class NotificacionController {
     }
 
     @PutMapping("/configuracion")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<ConfiguracionNotificacionDTO> updateConfiguracion(
             @Valid @RequestBody UpdateConfiguracionRequest request) {
         return ResponseEntity.ok(notificacionService.updateConfiguracion(request));

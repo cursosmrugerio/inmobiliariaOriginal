@@ -52,7 +52,8 @@ public class PropiedadService {
 
     @Transactional(readOnly = true)
     public List<PropiedadDTO> getPropiedadesByPropietario(Long propietarioId) {
-        return propiedadRepository.findByPropietarioId(propietarioId)
+        Long empresaId = TenantContext.getCurrentTenant();
+        return propiedadRepository.findByEmpresaIdAndPropietarioId(empresaId, propietarioId)
                 .stream().map(PropiedadDTO::fromEntityBasic).toList();
     }
 

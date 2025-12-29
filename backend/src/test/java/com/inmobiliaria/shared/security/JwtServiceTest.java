@@ -14,6 +14,7 @@ class JwtServiceTest {
 
     private JwtService jwtService;
     private UserDetails userDetails;
+    private static final Long EMPRESA_ID = 1L;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +33,7 @@ class JwtServiceTest {
 
     @Test
     void generateToken_shouldGenerateValidToken() {
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails, EMPRESA_ID);
 
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
@@ -41,7 +42,7 @@ class JwtServiceTest {
 
     @Test
     void extractUsername_shouldReturnCorrectUsername() {
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails, EMPRESA_ID);
 
         String username = jwtService.extractUsername(token);
 
@@ -50,7 +51,7 @@ class JwtServiceTest {
 
     @Test
     void isTokenValid_shouldReturnTrue_forValidToken() {
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails, EMPRESA_ID);
 
         boolean isValid = jwtService.isTokenValid(token, userDetails);
 
@@ -59,7 +60,7 @@ class JwtServiceTest {
 
     @Test
     void isTokenValid_shouldReturnFalse_forDifferentUser() {
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails, EMPRESA_ID);
 
         UserDetails differentUser = User.builder()
                 .username("different@test.com")
@@ -74,10 +75,13 @@ class JwtServiceTest {
 
     @Test
     void generateTokenWithEmpresaId_shouldIncludeEmpresaId() {
-        String token = jwtService.generateToken(userDetails, 1L);
+        String token = jwtService.generateToken(userDetails, EMPRESA_ID);
 
         assertThat(token).isNotNull();
         String username = jwtService.extractUsername(token);
         assertThat(username).isEqualTo("testuser@test.com");
+
+        Long extractedEmpresaId = jwtService.extractEmpresaId(token);
+        assertThat(extractedEmpresaId).isEqualTo(EMPRESA_ID);
     }
 }

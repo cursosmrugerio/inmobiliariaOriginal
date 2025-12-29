@@ -53,13 +53,15 @@ public class ContratoService {
 
     @Transactional(readOnly = true)
     public List<ContratoDTO> getContratosByPropiedad(Long propiedadId) {
-        return contratoRepository.findByPropiedadId(propiedadId)
+        Long empresaId = TenantContext.getCurrentTenant();
+        return contratoRepository.findByEmpresaIdAndPropiedadId(empresaId, propiedadId)
                 .stream().map(ContratoDTO::fromEntityBasic).toList();
     }
 
     @Transactional(readOnly = true)
     public List<ContratoDTO> getContratosByArrendatario(Long arrendatarioId) {
-        return contratoRepository.findByArrendatarioId(arrendatarioId)
+        Long empresaId = TenantContext.getCurrentTenant();
+        return contratoRepository.findByEmpresaIdAndArrendatarioId(empresaId, arrendatarioId)
                 .stream().map(ContratoDTO::fromEntityBasic).toList();
     }
 
@@ -77,7 +79,7 @@ public class ContratoService {
                 .orElseThrow(() -> new EntityNotFoundException("Propiedad no encontrada"));
 
         // Check if propiedad has active contract
-        contratoRepository.findContratoActivoByPropiedad(propiedad.getId())
+        contratoRepository.findContratoActivoByPropiedad(empresaId, propiedad.getId())
                 .ifPresent(c -> {
                     throw new IllegalArgumentException("La propiedad ya tiene un contrato activo");
                 });
@@ -198,7 +200,7 @@ public class ContratoService {
 
         // Check if propiedad already has active contract
         final Long contratoId = contrato.getId();
-        contratoRepository.findContratoActivoByPropiedad(contrato.getPropiedad().getId())
+        contratoRepository.findContratoActivoByPropiedad(empresaId, contrato.getPropiedad().getId())
                 .ifPresent(c -> {
                     if (!c.getId().equals(contratoId)) {
                         throw new IllegalArgumentException("La propiedad ya tiene un contrato activo");

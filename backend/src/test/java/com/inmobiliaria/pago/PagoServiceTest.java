@@ -8,11 +8,11 @@ import com.inmobiliaria.pago.dto.CreateCargoRequest;
 import com.inmobiliaria.pago.dto.CreatePagoRequest;
 import com.inmobiliaria.pago.dto.PagoDTO;
 import com.inmobiliaria.persona.Persona;
+import com.inmobiliaria.persona.PersonaRepository;
 import com.inmobiliaria.persona.TipoPersona;
 import com.inmobiliaria.propiedad.Propiedad;
 import com.inmobiliaria.catalogo.TipoPropiedad;
 import com.inmobiliaria.shared.multitenancy.TenantContext;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,14 +24,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +44,8 @@ class PagoServiceTest {
     private PagoAplicacionRepository pagoAplicacionRepository;
     @Mock
     private ContratoRepository contratoRepository;
+    @Mock
+    private PersonaRepository personaRepository;
 
     @InjectMocks
     private PagoService pagoService;
@@ -53,6 +54,7 @@ class PagoServiceTest {
     private Contrato contrato;
     private Cargo cargo;
     private Pago pago;
+    private Persona arrendatario;
     private final Long EMPRESA_ID = 1L;
 
     @BeforeEach
@@ -69,21 +71,25 @@ class PagoServiceTest {
                 .empresaId(EMPRESA_ID)
                 .tipoPropiedad(tipoPropiedad)
                 .nombre("Test Property")
+                .calle("Test Street")
                 .build();
 
-        Persona arrendatario = Persona.builder()
+        arrendatario = Persona.builder()
                 .id(1L)
                 .empresaId(EMPRESA_ID)
                 .tipoPersona(TipoPersona.FISICA)
                 .nombre("Juan")
+                .apellidoPaterno("Perez")
                 .build();
 
         contrato = Contrato.builder()
                 .id(1L)
                 .empresaId(EMPRESA_ID)
+                .numeroContrato("CTR-001")
                 .propiedad(propiedad)
                 .arrendatario(arrendatario)
                 .montoRenta(BigDecimal.valueOf(12000))
+                .diaPago(5)
                 .estado(EstadoContrato.ACTIVO)
                 .build();
 
@@ -93,20 +99,24 @@ class PagoServiceTest {
                 .contrato(contrato)
                 .tipoCargo(TipoCargo.RENTA)
                 .concepto("Renta Enero 2025")
-                .monto(BigDecimal.valueOf(12000))
-                .saldo(BigDecimal.valueOf(12000))
+                .montoOriginal(BigDecimal.valueOf(12000))
+                .montoPendiente(BigDecimal.valueOf(12000))
+                .montoPagado(BigDecimal.ZERO)
+                .fechaCargo(LocalDate.now())
                 .fechaVencimiento(LocalDate.now().plusDays(5))
                 .estado(EstadoCargo.PENDIENTE)
-                .activo(true)
                 .build();
 
         pago = Pago.builder()
                 .id(1L)
                 .empresaId(EMPRESA_ID)
                 .contrato(contrato)
+                .persona(arrendatario)
+                .numeroRecibo("REC-000001")
                 .monto(BigDecimal.valueOf(12000))
-                .fechaPago(LocalDateTime.now())
-                .metodoPago("TRANSFERENCIA")
+                .montoAplicado(BigDecimal.valueOf(12000))
+                .fechaPago(LocalDate.now())
+                .tipoPago(TipoPago.TRANSFERENCIA)
                 .referencia("REF123")
                 .estado(EstadoPago.APLICADO)
                 .build();
@@ -118,11 +128,11 @@ class PagoServiceTest {
     }
 
     @Test
-    void getAllCargos_shouldReturnActiveCargos() {
-        when(cargoRepository.findByEmpresaIdAndActivoTrue(EMPRESA_ID))
+    void getAllCargos_shouldReturnCargos() {
+        when(cargoRepository.findByEmpresaId(EMPRESA_ID))
                 .thenReturn(Arrays.asList(cargo));
 
-        List<CargoDTO> result = pagoService.getAllCargos(true);
+        List<CargoDTO> result = pagoService.getAllCargos();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getConcepto()).isEqualTo("Renta Enero 2025");
@@ -144,7 +154,8 @@ class PagoServiceTest {
         request.setContratoId(1L);
         request.setTipoCargo(TipoCargo.RENTA);
         request.setConcepto("Renta Febrero");
-        request.setMonto(BigDecimal.valueOf(12000));
+        request.setMontoOriginal(BigDecimal.valueOf(12000));
+        request.setFechaCargo(LocalDate.now());
         request.setFechaVencimiento(LocalDate.now().plusMonths(1));
 
         when(contratoRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
@@ -161,6 +172,8 @@ class PagoServiceTest {
     void getAllPagos_shouldReturnPagos() {
         when(pagoRepository.findByEmpresaId(EMPRESA_ID))
                 .thenReturn(Arrays.asList(pago));
+        when(pagoAplicacionRepository.findByPagoId(1L))
+                .thenReturn(Arrays.asList());
 
         List<PagoDTO> result = pagoService.getAllPagos();
 
@@ -170,8 +183,10 @@ class PagoServiceTest {
 
     @Test
     void getPagosByContrato_shouldReturnPagosByContract() {
-        when(pagoRepository.findByContratoIdAndEmpresaId(1L, EMPRESA_ID))
+        when(pagoRepository.findPagosByContratoOrdenados(EMPRESA_ID, 1L))
                 .thenReturn(Arrays.asList(pago));
+        when(pagoAplicacionRepository.findByPagoId(1L))
+                .thenReturn(Arrays.asList());
 
         List<PagoDTO> result = pagoService.getPagosByContrato(1L);
 
@@ -179,21 +194,23 @@ class PagoServiceTest {
     }
 
     @Test
-    void createPago_shouldCreateAndApplyPago() {
+    void createPago_shouldCreatePago() {
         CreatePagoRequest request = new CreatePagoRequest();
         request.setContratoId(1L);
+        request.setPersonaId(1L);
         request.setMonto(BigDecimal.valueOf(12000));
-        request.setMetodoPago("TRANSFERENCIA");
+        request.setTipoPago(TipoPago.TRANSFERENCIA);
+        request.setFechaPago(LocalDate.now());
         request.setReferencia("REF456");
-        request.setCargoIds(Arrays.asList(1L));
 
         when(contratoRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
                 .thenReturn(Optional.of(contrato));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(cargo));
+        when(personaRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
+                .thenReturn(Optional.of(arrendatario));
+        when(pagoRepository.findUltimoNumeroRecibo(EMPRESA_ID)).thenReturn(null);
         when(pagoRepository.save(any(Pago.class))).thenReturn(pago);
-        when(cargoRepository.save(any(Cargo.class))).thenReturn(cargo);
-        when(pagoAplicacionRepository.save(any(PagoAplicacion.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        when(pagoAplicacionRepository.findByPagoId(1L))
+                .thenReturn(Arrays.asList());
 
         PagoDTO result = pagoService.createPago(request);
 
@@ -202,11 +219,11 @@ class PagoServiceTest {
     }
 
     @Test
-    void getCargosPendientesByContrato_shouldReturnPendingCargos() {
-        when(cargoRepository.findByContratoIdAndEstadoAndEmpresaId(1L, EstadoCargo.PENDIENTE, EMPRESA_ID))
+    void getCargosPendientes_shouldReturnPendingCargos() {
+        when(cargoRepository.findByEmpresaIdAndEstadoIn(eq(EMPRESA_ID), any()))
                 .thenReturn(Arrays.asList(cargo));
 
-        List<CargoDTO> result = pagoService.getCargosPendientesByContrato(1L);
+        List<CargoDTO> result = pagoService.getCargosPendientes();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getEstado()).isEqualTo(EstadoCargo.PENDIENTE);

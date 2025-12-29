@@ -89,7 +89,7 @@ class EmpresaServiceTest {
 
         EmpresaDTO result = empresaService.getActiveById(1L);
 
-        assertThat(result.getActivo()).isTrue();
+        assertThat(result.isActivo()).isTrue();
     }
 
     @Test
@@ -155,7 +155,7 @@ class EmpresaServiceTest {
 
         empresaService.delete(1L);
 
-        verify(empresaRepository).save(argThat(e -> !e.getActivo()));
+        verify(empresaRepository).save(argThat(e -> !e.isActivo()));
     }
 
     @Test

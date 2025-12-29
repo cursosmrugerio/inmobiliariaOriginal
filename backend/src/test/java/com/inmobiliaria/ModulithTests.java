@@ -41,7 +41,8 @@ class ModulithTests {
         // This is implicitly tested by verify(), but we make it explicit
         modules.forEach(module -> {
             System.out.println("Module: " + module.getName());
-            module.getDependencies().forEach(dep -> {
+            var dependencies = module.getDependencies(modules);
+            dependencies.stream().forEach(dep -> {
                 System.out.println("  -> " + dep.getTargetModule().getName());
             });
         });

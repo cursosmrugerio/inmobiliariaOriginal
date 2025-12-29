@@ -22,9 +22,9 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
 
     List<Contrato> findByEmpresaIdAndEstado(Long empresaId, EstadoContrato estado);
 
-    List<Contrato> findByPropiedadId(Long propiedadId);
+    List<Contrato> findByEmpresaIdAndPropiedadId(Long empresaId, Long propiedadId);
 
-    List<Contrato> findByArrendatarioId(Long arrendatarioId);
+    List<Contrato> findByEmpresaIdAndArrendatarioId(Long empresaId, Long arrendatarioId);
 
     @Query("SELECT c FROM Contrato c WHERE c.empresaId = :empresaId AND c.estado = 'ACTIVO' " +
            "AND c.fechaFin <= :fechaLimite")
@@ -36,9 +36,10 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     List<Contrato> findContratosVencidos(@Param("empresaId") Long empresaId,
                                          @Param("fecha") LocalDate fecha);
 
-    @Query("SELECT c FROM Contrato c WHERE c.propiedad.id = :propiedadId " +
+    @Query("SELECT c FROM Contrato c WHERE c.empresaId = :empresaId AND c.propiedad.id = :propiedadId " +
            "AND c.estado IN ('ACTIVO', 'POR_VENCER') AND c.activo = true")
-    Optional<Contrato> findContratoActivoByPropiedad(@Param("propiedadId") Long propiedadId);
+    Optional<Contrato> findContratoActivoByPropiedad(@Param("empresaId") Long empresaId,
+                                                      @Param("propiedadId") Long propiedadId);
 
     @Query("SELECT COUNT(c) FROM Contrato c WHERE c.empresaId = :empresaId AND c.estado = :estado")
     long countByEmpresaIdAndEstado(@Param("empresaId") Long empresaId,

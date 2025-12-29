@@ -80,7 +80,7 @@ class EmpresaRepositoryIntegrationTest {
         Optional<Empresa> found = empresaRepository.findByIdAndActivoTrue(saved.getId());
 
         assertThat(found).isPresent();
-        assertThat(found.get().getActivo()).isTrue();
+        assertThat(found.get().isActivo()).isTrue();
     }
 
     @Test

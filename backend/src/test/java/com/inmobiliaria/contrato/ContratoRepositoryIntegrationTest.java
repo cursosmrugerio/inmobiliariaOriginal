@@ -48,7 +48,6 @@ class ContratoRepositoryIntegrationTest {
     private Contrato contrato;
     private Propiedad propiedad;
     private Persona arrendatario;
-    private final Long EMPRESA_ID = 1L;
 
     @BeforeEach
     void setUp() {
@@ -72,9 +71,9 @@ class ContratoRepositoryIntegrationTest {
                 .empresaId(empresa.getId())
                 .tipoPropiedad(tipoPropiedad)
                 .nombre("Test Property")
-                .direccionCompleta("Test Address")
-                .superficie(BigDecimal.valueOf(100))
-                .precioRenta(BigDecimal.valueOf(12000))
+                .calle("Test Address")
+                .superficieConstruccion(BigDecimal.valueOf(100))
+                .rentaMensual(BigDecimal.valueOf(12000))
                 .disponible(true)
                 .activo(true)
                 .build();
@@ -91,13 +90,14 @@ class ContratoRepositoryIntegrationTest {
 
         contrato = Contrato.builder()
                 .empresaId(empresa.getId())
+                .numeroContrato("CTR-TEST-001")
                 .propiedad(propiedad)
                 .arrendatario(arrendatario)
                 .fechaInicio(LocalDate.now())
                 .fechaFin(LocalDate.now().plusYears(1))
                 .montoRenta(BigDecimal.valueOf(12000))
-                .diaVencimiento(5)
-                .deposito(BigDecimal.valueOf(24000))
+                .diaPago(5)
+                .montoDeposito(BigDecimal.valueOf(24000))
                 .estado(EstadoContrato.ACTIVO)
                 .activo(true)
                 .build();
@@ -130,29 +130,29 @@ class ContratoRepositoryIntegrationTest {
     }
 
     @Test
-    void findByPropiedadIdAndEmpresaId_shouldReturnContratosByProperty() {
+    void findByEmpresaIdAndPropiedadId_shouldReturnContratosByProperty() {
         contratoRepository.save(contrato);
 
-        List<Contrato> contratos = contratoRepository.findByPropiedadIdAndEmpresaId(propiedad.getId(), contrato.getEmpresaId());
+        List<Contrato> contratos = contratoRepository.findByEmpresaIdAndPropiedadId(contrato.getEmpresaId(), propiedad.getId());
 
         assertThat(contratos).hasSize(1);
     }
 
     @Test
-    void findByArrendatarioIdAndEmpresaId_shouldReturnContratosByTenant() {
+    void findByEmpresaIdAndArrendatarioId_shouldReturnContratosByTenant() {
         contratoRepository.save(contrato);
 
-        List<Contrato> contratos = contratoRepository.findByArrendatarioIdAndEmpresaId(arrendatario.getId(), contrato.getEmpresaId());
+        List<Contrato> contratos = contratoRepository.findByEmpresaIdAndArrendatarioId(contrato.getEmpresaId(), arrendatario.getId());
 
         assertThat(contratos).hasSize(1);
     }
 
     @Test
-    void findContratosProximosAVencer_shouldReturnExpiringContratos() {
+    void findContratosPorVencer_shouldReturnExpiringContratos() {
         contrato.setFechaFin(LocalDate.now().plusDays(15));
         contratoRepository.save(contrato);
 
-        List<Contrato> contratos = contratoRepository.findContratosProximosAVencer(
+        List<Contrato> contratos = contratoRepository.findContratosPorVencer(
                 contrato.getEmpresaId(),
                 LocalDate.now().plusDays(30)
         );
@@ -161,11 +161,11 @@ class ContratoRepositoryIntegrationTest {
     }
 
     @Test
-    void findContratosProximosAVencer_shouldNotReturnFarExpiringContratos() {
+    void findContratosPorVencer_shouldNotReturnFarExpiringContratos() {
         contrato.setFechaFin(LocalDate.now().plusDays(60));
         contratoRepository.save(contrato);
 
-        List<Contrato> contratos = contratoRepository.findContratosProximosAVencer(
+        List<Contrato> contratos = contratoRepository.findContratosPorVencer(
                 contrato.getEmpresaId(),
                 LocalDate.now().plusDays(30)
         );
@@ -174,10 +174,10 @@ class ContratoRepositoryIntegrationTest {
     }
 
     @Test
-    void findByEstadoAndEmpresaId_shouldReturnContratosByStatus() {
+    void findByEmpresaIdAndEstado_shouldReturnContratosByStatus() {
         contratoRepository.save(contrato);
 
-        List<Contrato> contratos = contratoRepository.findByEstadoAndEmpresaId(EstadoContrato.ACTIVO, contrato.getEmpresaId());
+        List<Contrato> contratos = contratoRepository.findByEmpresaIdAndEstado(contrato.getEmpresaId(), EstadoContrato.ACTIVO);
 
         assertThat(contratos).hasSize(1);
     }

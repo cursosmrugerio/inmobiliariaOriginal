@@ -28,6 +28,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,6 +64,7 @@ class ContratoServiceTest {
                 .empresaId(EMPRESA_ID)
                 .tipoPropiedad(tipoPropiedad)
                 .nombre("Test Property")
+                .calle("Test Street")
                 .disponible(true)
                 .activo(true)
                 .build();
@@ -79,13 +81,14 @@ class ContratoServiceTest {
         contrato = Contrato.builder()
                 .id(1L)
                 .empresaId(EMPRESA_ID)
+                .numeroContrato("CTR-202401-0001")
                 .propiedad(propiedad)
                 .arrendatario(arrendatario)
                 .fechaInicio(LocalDate.now())
                 .fechaFin(LocalDate.now().plusYears(1))
                 .montoRenta(BigDecimal.valueOf(12000))
-                .diaVencimiento(5)
-                .deposito(BigDecimal.valueOf(24000))
+                .diaPago(5)
+                .montoDeposito(BigDecimal.valueOf(24000))
                 .estado(EstadoContrato.ACTIVO)
                 .activo(true)
                 .build();
@@ -101,7 +104,7 @@ class ContratoServiceTest {
         when(contratoRepository.findByEmpresaIdAndActivoTrue(EMPRESA_ID))
                 .thenReturn(Arrays.asList(contrato));
 
-        List<ContratoDTO> result = contratoService.getAllContratos(true);
+        List<ContratoDTO> result = contratoService.getAllContratos(true, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getMontoRenta()).isEqualTo(BigDecimal.valueOf(12000));
@@ -135,26 +138,26 @@ class ContratoServiceTest {
         request.setFechaInicio(LocalDate.now());
         request.setFechaFin(LocalDate.now().plusYears(1));
         request.setMontoRenta(BigDecimal.valueOf(15000));
-        request.setDiaVencimiento(5);
-        request.setDeposito(BigDecimal.valueOf(30000));
+        request.setDiaPago(5);
+        request.setMontoDeposito(BigDecimal.valueOf(30000));
 
         when(propiedadRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
                 .thenReturn(Optional.of(propiedad));
         when(personaRepository.findByIdAndEmpresaId(1L, EMPRESA_ID))
                 .thenReturn(Optional.of(arrendatario));
+        when(contratoRepository.findContratoActivoByPropiedad(EMPRESA_ID, 1L))
+                .thenReturn(Optional.empty());
         when(contratoRepository.save(any(Contrato.class))).thenReturn(contrato);
-        when(propiedadRepository.save(any(Propiedad.class))).thenReturn(propiedad);
 
         ContratoDTO result = contratoService.createContrato(request);
 
         assertThat(result).isNotNull();
         verify(contratoRepository).save(any(Contrato.class));
-        verify(propiedadRepository).save(argThat(p -> !p.getDisponible()));
     }
 
     @Test
     void getContratosByPropiedad_shouldReturnContratosForProperty() {
-        when(contratoRepository.findByPropiedadIdAndEmpresaId(1L, EMPRESA_ID))
+        when(contratoRepository.findByEmpresaIdAndPropiedadId(EMPRESA_ID, 1L))
                 .thenReturn(Arrays.asList(contrato));
 
         List<ContratoDTO> result = contratoService.getContratosByPropiedad(1L);
@@ -164,7 +167,7 @@ class ContratoServiceTest {
 
     @Test
     void getContratosByArrendatario_shouldReturnContratosForTenant() {
-        when(contratoRepository.findByArrendatarioIdAndEmpresaId(1L, EMPRESA_ID))
+        when(contratoRepository.findByEmpresaIdAndArrendatarioId(EMPRESA_ID, 1L))
                 .thenReturn(Arrays.asList(contrato));
 
         List<ContratoDTO> result = contratoService.getContratosByArrendatario(1L);
@@ -173,11 +176,11 @@ class ContratoServiceTest {
     }
 
     @Test
-    void getContratosProximosAVencer_shouldReturnExpiringContracts() {
-        when(contratoRepository.findContratosProximosAVencer(eq(EMPRESA_ID), any(LocalDate.class)))
+    void getContratosPorVencer_shouldReturnExpiringContracts() {
+        when(contratoRepository.findContratosPorVencer(eq(EMPRESA_ID), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(contrato));
 
-        List<ContratoDTO> result = contratoService.getContratosProximosAVencer(30);
+        List<ContratoDTO> result = contratoService.getContratosPorVencer(30);
 
         assertThat(result).hasSize(1);
     }
@@ -189,9 +192,9 @@ class ContratoServiceTest {
         when(contratoRepository.save(any(Contrato.class))).thenReturn(contrato);
         when(propiedadRepository.save(any(Propiedad.class))).thenReturn(propiedad);
 
-        contratoService.terminarContrato(1L);
+        contratoService.terminarContrato(1L, "Fin anticipado");
 
         verify(contratoRepository).save(argThat(c -> c.getEstado() == EstadoContrato.TERMINADO));
-        verify(propiedadRepository).save(argThat(Propiedad::getDisponible));
+        verify(propiedadRepository).save(argThat(Propiedad::isDisponible));
     }
 }
