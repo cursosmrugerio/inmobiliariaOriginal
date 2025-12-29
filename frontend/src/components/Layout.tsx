@@ -24,6 +24,8 @@ import {
   Assessment as ReportIcon,
   Notifications as NotificationsIcon,
   Build as BuildIcon,
+  AccountBalance as CobranzaIcon,
+  SupervisedUserCircle as UsersIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import EmpresaSelector from './EmpresaSelector';
@@ -94,6 +96,14 @@ export default function Layout() {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/cobranza')}>
+            <ListItemIcon>
+              <CobranzaIcon />
+            </ListItemIcon>
+            <ListItemText primary="Cobranza" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
           <ListItemButton onClick={() => navigate('/notificaciones')}>
             <ListItemIcon>
               <NotificationsIcon />
@@ -109,6 +119,16 @@ export default function Layout() {
             <ListItemText primary="Mantenimiento" />
           </ListItemButton>
         </ListItem>
+        {user?.rol === 'ADMINISTRADOR' && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => navigate('/usuarios')}>
+              <ListItemIcon>
+                <UsersIcon />
+              </ListItemIcon>
+              <ListItemText primary="Usuarios" />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
     </div>
   );

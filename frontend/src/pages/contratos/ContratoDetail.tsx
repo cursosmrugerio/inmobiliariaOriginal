@@ -287,6 +287,10 @@ export default function ContratoDetail() {
                 <Typography>{formatCurrency(contrato.montoDeposito)}</Typography>
               </Grid>
               <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">Fianza</Typography>
+                <Typography>{formatCurrency(contrato.montoFianza)}</Typography>
+              </Grid>
+              <Grid item xs={6}>
                 <Typography variant="body2" color="text.secondary">Penalidad Diaria</Typography>
                 <Typography>{formatCurrency(contrato.montoPenalidadDiaria)}</Typography>
               </Grid>

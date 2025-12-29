@@ -26,7 +26,9 @@ import {
   Star as StarIcon
 } from '@mui/icons-material';
 import { personaService } from '../../services/personaService';
+import { contratoService } from '../../services/contratoService';
 import { Persona } from '../../types/persona';
+import { Contrato, EstadoContrato } from '../../types/contrato';
 import { useEmpresa } from '../../context/EmpresaContext';
 
 export default function PersonaDetail() {
@@ -35,12 +37,24 @@ export default function PersonaDetail() {
   const { empresaActual } = useEmpresa();
 
   const [persona, setPersona] = useState<Persona | null>(null);
+  const [contratos, setContratos] = useState<Contrato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const estadoColors: Record<EstadoContrato, 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'> = {
+    BORRADOR: 'default',
+    ACTIVO: 'success',
+    POR_VENCER: 'warning',
+    VENCIDO: 'error',
+    RENOVADO: 'info',
+    TERMINADO: 'secondary',
+    CANCELADO: 'default'
+  };
 
   useEffect(() => {
     if (id) {
       loadPersona(parseInt(id));
+      loadContratos(parseInt(id));
     }
   }, [id]);
 
@@ -56,6 +70,25 @@ export default function PersonaDetail() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadContratos = async (personaId: number) => {
+    try {
+      const data = await contratoService.getByArrendatario(personaId);
+      setContratos(data);
+    } catch (err) {
+      console.error('Error al cargar contratos:', err);
+    }
+  };
+
+  const formatDate = (date?: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('es-MX');
+  };
+
+  const formatCurrency = (value?: number) => {
+    if (!value) return '-';
+    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
   };
 
   const handleDeleteDireccion = async (direccionId: number) => {
@@ -280,6 +313,64 @@ export default function PersonaDetail() {
                 </List>
               ) : (
                 <Typography color="text.secondary">Sin cuentas bancarias registradas</Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Contratos como Arrendatario */}
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader title="Contratos como Arrendatario" />
+            <CardContent>
+              {contratos.length > 0 ? (
+                <Box sx={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>N° Contrato</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Propiedad</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Vigencia</th>
+                        <th style={{ textAlign: 'right', padding: '8px' }}>Renta</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Estado</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {contratos.map((contrato) => (
+                        <tr key={contrato.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                          <td style={{ padding: '8px' }}>{contrato.numeroContrato}</td>
+                          <td style={{ padding: '8px' }}>{contrato.propiedadNombre}</td>
+                          <td style={{ padding: '8px' }}>
+                            {formatDate(contrato.fechaInicio)} - {formatDate(contrato.fechaFin)}
+                          </td>
+                          <td style={{ padding: '8px', textAlign: 'right' }}>
+                            {formatCurrency(contrato.montoRenta)}
+                          </td>
+                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                            <Chip
+                              label={contrato.estado}
+                              size="small"
+                              color={estadoColors[contrato.estado]}
+                            />
+                          </td>
+                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => navigate(`/contratos/${contrato.id}`)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Box>
+              ) : (
+                <Typography color="text.secondary">
+                  Esta persona no tiene contratos como arrendatario
+                </Typography>
               )}
             </CardContent>
           </Card>

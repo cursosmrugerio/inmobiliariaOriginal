@@ -25,7 +25,9 @@ import {
   Home as HomeIcon
 } from '@mui/icons-material';
 import { propiedadService } from '../../services/propiedadService';
+import { contratoService } from '../../services/contratoService';
 import { Propiedad } from '../../types/propiedad';
+import { Contrato, EstadoContrato } from '../../types/contrato';
 import { useEmpresa } from '../../context/EmpresaContext';
 
 export default function PropiedadDetail() {
@@ -33,12 +35,24 @@ export default function PropiedadDetail() {
   const { id } = useParams();
   const { empresaActual } = useEmpresa();
   const [propiedad, setPropiedad] = useState<Propiedad | null>(null);
+  const [contratos, setContratos] = useState<Contrato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const estadoColors: Record<EstadoContrato, 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'> = {
+    BORRADOR: 'default',
+    ACTIVO: 'success',
+    POR_VENCER: 'warning',
+    VENCIDO: 'error',
+    RENOVADO: 'info',
+    TERMINADO: 'secondary',
+    CANCELADO: 'default'
+  };
 
   useEffect(() => {
     if (id && empresaActual) {
       loadPropiedad(parseInt(id));
+      loadContratos(parseInt(id));
     }
   }, [id, empresaActual]);
 
@@ -54,6 +68,20 @@ export default function PropiedadDetail() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadContratos = async (propiedadId: number) => {
+    try {
+      const data = await contratoService.getByPropiedad(propiedadId);
+      setContratos(data);
+    } catch (err) {
+      console.error('Error al cargar contratos:', err);
+    }
+  };
+
+  const formatDate = (date?: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('es-MX');
   };
 
   const handleDelete = async () => {
@@ -272,6 +300,61 @@ export default function PropiedadDetail() {
             </Paper>
           </Grid>
         )}
+
+        {/* Contratos de esta Propiedad */}
+        <Grid size={{ xs: 12 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Contratos</Typography>
+            <Divider sx={{ mb: 2 }} />
+            {contratos.length > 0 ? (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>N° Contrato</TableCell>
+                      <TableCell>Arrendatario</TableCell>
+                      <TableCell>Vigencia</TableCell>
+                      <TableCell align="right">Renta</TableCell>
+                      <TableCell align="center">Estado</TableCell>
+                      <TableCell align="center">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {contratos.map((contrato) => (
+                      <TableRow key={contrato.id}>
+                        <TableCell>{contrato.numeroContrato}</TableCell>
+                        <TableCell>{contrato.arrendatarioNombre}</TableCell>
+                        <TableCell>
+                          {formatDate(contrato.fechaInicio)} - {formatDate(contrato.fechaFin)}
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(contrato.montoRenta)}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={contrato.estado}
+                            size="small"
+                            color={estadoColors[contrato.estado]}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => navigate(`/contratos/${contrato.id}`)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Typography color="text.secondary">
+                Esta propiedad no tiene contratos registrados
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   );

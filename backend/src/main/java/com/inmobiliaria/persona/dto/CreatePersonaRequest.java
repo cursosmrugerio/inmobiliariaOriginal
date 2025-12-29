@@ -4,6 +4,7 @@ import com.inmobiliaria.persona.TipoPersona;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class CreatePersonaRequest {
     private TipoPersona tipoPersona;
 
     // Persona Física
+    @NotBlank(message = "El nombre es requerido")
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     private String nombre;
 
@@ -40,16 +42,18 @@ public class CreatePersonaRequest {
 
     // Común
     @NotBlank(message = "El RFC es requerido")
-    @Size(max = 13, message = "El RFC no puede exceder 13 caracteres")
+    @Size(min = 12, max = 13, message = "El RFC debe tener 12 o 13 caracteres")
     private String rfc;
 
     @Email(message = "El email debe ser válido")
     private String email;
 
     @Size(max = 20, message = "El teléfono no puede exceder 20 caracteres")
+    @Pattern(regexp = "^$|^[0-9\\-\\+\\s\\(\\)]{7,20}$", message = "Formato de teléfono inválido")
     private String telefono;
 
     @Size(max = 20, message = "El teléfono móvil no puede exceder 20 caracteres")
+    @Pattern(regexp = "^$|^[0-9\\-\\+\\s\\(\\)]{7,20}$", message = "Formato de teléfono móvil inválido")
     private String telefonoMovil;
 
     private List<Integer> rolesIds;

@@ -16,6 +16,9 @@ import { PagosList, PagoForm, PagoDetail, CargosList, CargoForm } from './pages/
 import ReportesPage from './pages/reportes/ReportesPage';
 import { NotificacionesDashboard } from './pages/notificaciones';
 import MantenimientoPage from './pages/mantenimiento/MantenimientoPage';
+import CobranzaDashboard from './pages/cobranza/CobranzaDashboard';
+import UsuariosList from './pages/usuarios/UsuariosList';
+import UsuarioForm from './pages/usuarios/UsuarioForm';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -52,8 +55,12 @@ function App() {
         <Route path="pagos/cargos" element={<CargosList />} />
         <Route path="pagos/cargos/nuevo" element={<CargoForm />} />
         <Route path="reportes" element={<ReportesPage />} />
+        <Route path="cobranza" element={<CobranzaDashboard />} />
         <Route path="notificaciones" element={<NotificacionesDashboard />} />
         <Route path="mantenimiento" element={<MantenimientoPage />} />
+        <Route path="usuarios" element={<UsuariosList />} />
+        <Route path="usuarios/nuevo" element={<UsuarioForm />} />
+        <Route path="usuarios/:id/editar" element={<UsuarioForm />} />
       </Route>
     </Routes>
   );

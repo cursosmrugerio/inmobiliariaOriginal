@@ -117,6 +117,7 @@ public class ContratoService {
                 .diaPago(request.getDiaPago())
                 .montoRenta(request.getMontoRenta())
                 .montoDeposito(request.getMontoDeposito())
+                .montoFianza(request.getMontoFianza())
                 .montoPenalidadDiaria(request.getMontoPenalidadDiaria())
                 .diasGracia(request.getDiasGracia() != null ? request.getDiasGracia() : 0)
                 .porcentajeIncrementoAnual(request.getPorcentajeIncrementoAnual())
@@ -166,6 +167,7 @@ public class ContratoService {
         if (request.getDiaPago() != null) contrato.setDiaPago(request.getDiaPago());
         if (request.getMontoRenta() != null) contrato.setMontoRenta(request.getMontoRenta());
         if (request.getMontoDeposito() != null) contrato.setMontoDeposito(request.getMontoDeposito());
+        if (request.getMontoFianza() != null) contrato.setMontoFianza(request.getMontoFianza());
         if (request.getMontoPenalidadDiaria() != null) contrato.setMontoPenalidadDiaria(request.getMontoPenalidadDiaria());
         if (request.getDiasGracia() != null) contrato.setDiasGracia(request.getDiasGracia());
         if (request.getPorcentajeIncrementoAnual() != null) contrato.setPorcentajeIncrementoAnual(request.getPorcentajeIncrementoAnual());
@@ -312,6 +314,7 @@ public class ContratoService {
                 .diaPago(contratoAnterior.getDiaPago())
                 .montoRenta(nuevoMontoRenta)
                 .montoDeposito(contratoAnterior.getMontoDeposito())
+                .montoFianza(contratoAnterior.getMontoFianza())
                 .montoPenalidadDiaria(contratoAnterior.getMontoPenalidadDiaria())
                 .diasGracia(contratoAnterior.getDiasGracia())
                 .porcentajeIncrementoAnual(contratoAnterior.getPorcentajeIncrementoAnual())

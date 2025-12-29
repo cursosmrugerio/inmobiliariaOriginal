@@ -56,6 +56,9 @@ public class Contrato implements TenantAware {
     @Column(name = "monto_deposito", precision = 12, scale = 2)
     private BigDecimal montoDeposito;
 
+    @Column(name = "monto_fianza", precision = 12, scale = 2)
+    private BigDecimal montoFianza;
+
     @Column(name = "monto_penalidad_diaria", precision = 10, scale = 2)
     private BigDecimal montoPenalidadDiaria;
 

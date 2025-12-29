@@ -29,13 +29,17 @@ import {
 } from '@mui/icons-material';
 import { reporteService, downloadBlob } from '../../services/reporteService';
 import { personaService } from '../../services/personaService';
+import { contratoService } from '../../services/contratoService';
 import type {
   EstadoCuenta,
   AntiguedadSaldos,
   ReporteCarteraVencida,
   ProyeccionCobranzaReporte,
+  Finiquito,
+  ReporteMensual,
 } from '../../types/reporte';
 import type { Persona } from '../../types/persona';
+import type { Contrato } from '../../types/contrato';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -76,8 +80,19 @@ export default function ReportesPage() {
   const [periodoInicio, setPeriodoInicio] = useState('');
   const [periodoFin, setPeriodoFin] = useState('');
 
+  // Finiquito
+  const [contratos, setContratos] = useState<Contrato[]>([]);
+  const [selectedContrato, setSelectedContrato] = useState<Contrato | null>(null);
+  const [finiquito, setFiniquito] = useState<Finiquito | null>(null);
+
+  // Reporte Mensual
+  const [reporteMensual, setReporteMensual] = useState<ReporteMensual | null>(null);
+  const [mesReporte, setMesReporte] = useState(new Date().getMonth() + 1);
+  const [anioReporte, setAnioReporte] = useState(new Date().getFullYear());
+
   useEffect(() => {
     loadPersonas();
+    loadContratos();
   }, []);
 
   const loadPersonas = async () => {
@@ -86,6 +101,15 @@ export default function ReportesPage() {
       setPersonas(data);
     } catch {
       console.error('Error loading personas');
+    }
+  };
+
+  const loadContratos = async () => {
+    try {
+      const data = await contratoService.getAll();
+      setContratos(data);
+    } catch {
+      console.error('Error loading contratos');
     }
   };
 
@@ -219,6 +243,63 @@ export default function ReportesPage() {
     }
   };
 
+  // Finiquito handlers
+  const handleGenerarFiniquito = async () => {
+    if (!selectedContrato) {
+      setError('Seleccione un contrato');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reporteService.getFiniquito(selectedContrato.id);
+      setFiniquito(data);
+    } catch {
+      setError('Error al generar finiquito');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportFiniquito = async (format: 'excel' | 'csv') => {
+    if (!selectedContrato) return;
+    try {
+      const blob = format === 'excel'
+        ? await reporteService.exportFiniquitoExcel(selectedContrato.id)
+        : await reporteService.exportFiniquitoCsv(selectedContrato.id);
+      const filename = `finiquito_${selectedContrato.numeroContrato}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      downloadBlob(blob, filename);
+    } catch {
+      setError(`Error al exportar a ${format.toUpperCase()}`);
+    }
+  };
+
+  // Reporte Mensual handlers
+  const handleGenerarReporteMensual = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reporteService.getReporteMensual(mesReporte, anioReporte);
+      setReporteMensual(data);
+    } catch {
+      setError('Error al generar reporte mensual');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportReporteMensual = async (format: 'excel' | 'csv') => {
+    try {
+      const blob = format === 'excel'
+        ? await reporteService.exportReporteMensualExcel(mesReporte, anioReporte)
+        : await reporteService.exportReporteMensualCsv(mesReporte, anioReporte);
+      const filename = `reporte_mensual_${anioReporte}_${mesReporte}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      downloadBlob(blob, filename);
+    } catch {
+      setError(`Error al exportar a ${format.toUpperCase()}`);
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
@@ -232,11 +313,13 @@ export default function ReportesPage() {
       )}
 
       <Paper sx={{ width: '100%' }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
           <Tab label="Estado de Cuenta" />
           <Tab label="Antiguedad de Saldos" />
           <Tab label="Cartera Vencida" />
           <Tab label="Proyeccion de Cobranza" />
+          <Tab label="Finiquito" />
+          <Tab label="Reporte Mensual" />
         </Tabs>
 
         {/* Estado de Cuenta */}
@@ -703,6 +786,277 @@ export default function ReportesPage() {
                   </TableBody>
                 </Table>
               </TableContainer>
+            </>
+          )}
+        </TabPanel>
+
+        {/* Finiquito */}
+        <TabPanel value={tabValue} index={4}>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                options={contratos}
+                getOptionLabel={(option) => `${option.numeroContrato} - ${option.arrendatarioNombre} (${option.propiedadNombre})`}
+                value={selectedContrato}
+                onChange={(_, newValue) => setSelectedContrato(newValue)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Contrato" fullWidth />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                variant="contained"
+                onClick={handleGenerarFiniquito}
+                disabled={loading}
+                fullWidth
+                sx={{ height: '56px' }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Generar'}
+              </Button>
+            </Grid>
+          </Grid>
+
+          {finiquito && (
+            <>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <ButtonGroup variant="outlined">
+                  <Button startIcon={<ExcelIcon />} onClick={() => handleExportFiniquito('excel')}>
+                    Excel
+                  </Button>
+                  <Button startIcon={<CsvIcon />} onClick={() => handleExportFiniquito('csv')}>
+                    CSV
+                  </Button>
+                </ButtonGroup>
+              </Box>
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Contrato {finiquito.numeroContrato}</Typography>
+                      <Typography color="text.secondary">Arrendatario: {finiquito.nombreArrendatario}</Typography>
+                      <Typography color="text.secondary">Propiedad: {finiquito.direccionPropiedad}</Typography>
+                      <Typography color="text.secondary">Vigencia: {finiquito.fechaInicioContrato} - {finiquito.fechaFinContrato}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Resumen Financiero</Typography>
+                      <Typography>Rentas Pagadas: {formatCurrency(finiquito.totalRentasPagadas)}</Typography>
+                      <Typography color="error">Rentas Pendientes: {formatCurrency(finiquito.totalRentasPendientes)}</Typography>
+                      <Typography>Deposito: {formatCurrency(finiquito.montoDeposito || 0)}</Typography>
+                      <Typography color="error">Deducciones: {formatCurrency(finiquito.deduccionesDeposito)}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Liquidacion</Typography>
+                      <Typography>Saldo Pendiente: {formatCurrency(finiquito.saldoPendiente)}</Typography>
+                      <Typography>Deposito a Devolver: {formatCurrency(finiquito.depositoADevolver)}</Typography>
+                      <Typography variant="h5" color="primary" sx={{ mt: 1 }}>
+                        Monto Final: {formatCurrency(finiquito.montoLiquidacion)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Concepto</TableCell>
+                      <TableCell>Tipo</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell align="right">Monto</TableCell>
+                      <TableCell>Estado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {finiquito.conceptos.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.concepto}</TableCell>
+                        <TableCell>{item.tipo}</TableCell>
+                        <TableCell>{item.fecha}</TableCell>
+                        <TableCell align="right">{formatCurrency(item.monto)}</TableCell>
+                        <TableCell>{item.estado}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
+        </TabPanel>
+
+        {/* Reporte Mensual */}
+        <TabPanel value={tabValue} index={5}>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Mes"
+                type="number"
+                value={mesReporte}
+                onChange={(e) => setMesReporte(parseInt(e.target.value))}
+                fullWidth
+                inputProps={{ min: 1, max: 12 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Ano"
+                type="number"
+                value={anioReporte}
+                onChange={(e) => setAnioReporte(parseInt(e.target.value))}
+                fullWidth
+                inputProps={{ min: 2020, max: 2030 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                variant="contained"
+                onClick={handleGenerarReporteMensual}
+                disabled={loading}
+                fullWidth
+                sx={{ height: '56px' }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Generar'}
+              </Button>
+            </Grid>
+          </Grid>
+
+          {reporteMensual && (
+            <>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <ButtonGroup variant="outlined">
+                  <Button startIcon={<ExcelIcon />} onClick={() => handleExportReporteMensual('excel')}>
+                    Excel
+                  </Button>
+                  <Button startIcon={<CsvIcon />} onClick={() => handleExportReporteMensual('csv')}>
+                    CSV
+                  </Button>
+                </ButtonGroup>
+              </Box>
+
+              <Typography variant="h5" gutterBottom>{reporteMensual.periodoDescripcion}</Typography>
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Propiedades</Typography>
+                      <Typography variant="h6">{reporteMensual.totalPropiedades}</Typography>
+                      <Typography variant="body2">Ocupadas: {reporteMensual.propiedadesOcupadas}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Contratos Activos</Typography>
+                      <Typography variant="h6">{reporteMensual.contratosActivos}</Typography>
+                      <Typography variant="body2" color="warning.main">Por vencer: {reporteMensual.contratosPorVencer}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Renta Esperada</Typography>
+                      <Typography variant="h6">{formatCurrency(reporteMensual.rentaEsperada)}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Renta Cobrada</Typography>
+                      <Typography variant="h6" color="success.main">{formatCurrency(reporteMensual.rentaCobrada)}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Cobranza</Typography>
+                      <Typography variant="h6" color="primary">{reporteMensual.porcentajeCobranza}%</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary">Cartera Vencida</Typography>
+                      <Typography variant="h6" color="error">{formatCurrency(reporteMensual.carteraVencida)}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              <Typography variant="h6" gutterBottom>Detalle por Propiedad</Typography>
+              <TableContainer component={Paper} sx={{ mb: 3 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Propiedad</TableCell>
+                      <TableCell>Tipo</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Arrendatario</TableCell>
+                      <TableCell align="right">Renta</TableCell>
+                      <TableCell align="right">Cobrado</TableCell>
+                      <TableCell align="right">Pendiente</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {reporteMensual.detallePropiedades.map((item) => (
+                      <TableRow key={item.propiedadId}>
+                        <TableCell>{item.direccion}</TableCell>
+                        <TableCell>{item.tipoPropiedad}</TableCell>
+                        <TableCell>{item.estadoOcupacion}</TableCell>
+                        <TableCell>{item.arrendatario || '-'}</TableCell>
+                        <TableCell align="right">{formatCurrency(item.rentaMensual)}</TableCell>
+                        <TableCell align="right">{formatCurrency(item.rentaCobrada)}</TableCell>
+                        <TableCell align="right">{formatCurrency(item.saldoPendiente)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {reporteMensual.topMorosos.length > 0 && (
+                <>
+                  <Typography variant="h6" gutterBottom>Top Morosos</Typography>
+                  <TableContainer component={Paper}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Cliente</TableCell>
+                          <TableCell>Propiedad</TableCell>
+                          <TableCell align="right">Adeudo</TableCell>
+                          <TableCell align="right">Dias Vencido</TableCell>
+                          <TableCell>Estado</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {reporteMensual.topMorosos.map((item) => (
+                          <TableRow key={item.personaId}>
+                            <TableCell>{item.nombre}</TableCell>
+                            <TableCell>{item.propiedad}</TableCell>
+                            <TableCell align="right">{formatCurrency(item.montoAdeudado)}</TableCell>
+                            <TableCell align="right">{item.diasVencido}</TableCell>
+                            <TableCell>{item.estadoCobranza}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
+              )}
             </>
           )}
         </TabPanel>

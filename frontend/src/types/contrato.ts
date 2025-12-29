@@ -35,6 +35,7 @@ export interface Contrato {
   // Montos
   montoRenta: number;
   montoDeposito?: number;
+  montoFianza?: number;
   montoPenalidadDiaria?: number;
   diasGracia?: number;
   porcentajeIncrementoAnual?: number;
@@ -65,6 +66,7 @@ export interface CreateContratoRequest {
   diaPago: number;
   montoRenta: number;
   montoDeposito?: number;
+  montoFianza?: number;
   montoPenalidadDiaria?: number;
   diasGracia?: number;
   porcentajeIncrementoAnual?: number;
@@ -82,6 +84,7 @@ export interface UpdateContratoRequest {
   diaPago?: number;
   montoRenta?: number;
   montoDeposito?: number;
+  montoFianza?: number;
   montoPenalidadDiaria?: number;
   diasGracia?: number;
   porcentajeIncrementoAnual?: number;

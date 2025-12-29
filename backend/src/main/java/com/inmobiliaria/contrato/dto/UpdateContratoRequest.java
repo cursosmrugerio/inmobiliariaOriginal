@@ -32,6 +32,9 @@ public class UpdateContratoRequest {
     @DecimalMin(value = "0", message = "El depósito no puede ser negativo")
     private BigDecimal montoDeposito;
 
+    @DecimalMin(value = "0", message = "La fianza no puede ser negativa")
+    private BigDecimal montoFianza;
+
     @DecimalMin(value = "0", message = "La penalidad no puede ser negativa")
     private BigDecimal montoPenalidadDiaria;
 

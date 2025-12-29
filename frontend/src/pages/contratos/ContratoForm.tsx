@@ -47,6 +47,7 @@ export default function ContratoForm() {
     diaPago: 1,
     montoRenta: 0,
     montoDeposito: 0,
+    montoFianza: 0,
     montoPenalidadDiaria: 0,
     diasGracia: 5,
     porcentajeIncrementoAnual: 5,
@@ -82,6 +83,7 @@ export default function ContratoForm() {
           diaPago: contrato.diaPago,
           montoRenta: contrato.montoRenta,
           montoDeposito: contrato.montoDeposito || 0,
+          montoFianza: contrato.montoFianza || 0,
           montoPenalidadDiaria: contrato.montoPenalidadDiaria || 0,
           diasGracia: contrato.diasGracia || 0,
           porcentajeIncrementoAnual: contrato.porcentajeIncrementoAnual || 0,
@@ -290,6 +292,19 @@ export default function ContratoForm() {
                 label="Depósito"
                 value={formData.montoDeposito}
                 onChange={(e) => handleChange('montoDeposito', parseFloat(e.target.value))}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Fianza"
+                value={formData.montoFianza}
+                onChange={(e) => handleChange('montoFianza', parseFloat(e.target.value))}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>
                 }}

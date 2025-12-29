@@ -138,3 +138,110 @@ export interface ProyeccionCobranzaReporte {
   totalPagosRecibidos: number;
   detalleMensual: ProyeccionMes[];
 }
+
+// Finiquito de Contrato
+export interface ConceptoFiniquito {
+  concepto: string;
+  tipo: string;
+  fecha: string;
+  monto: number;
+  estado: string;
+  notas?: string;
+}
+
+export interface Finiquito {
+  contratoId: number;
+  numeroContrato: string;
+  empresaId: number;
+  nombreEmpresa: string;
+  arrendatarioId: number;
+  nombreArrendatario: string;
+  rfcArrendatario?: string;
+  emailArrendatario?: string;
+  telefonoArrendatario?: string;
+  propiedadId: number;
+  direccionPropiedad: string;
+  tipoPropiedad: string;
+  fechaInicioContrato: string;
+  fechaFinContrato: string;
+  fechaTerminacion?: string;
+  motivoTerminacion?: string;
+  montoRentaMensual: number;
+  montoDeposito?: number;
+  totalRentasPagadas: number;
+  totalRentasPendientes: number;
+  totalCargosAdicionales: number;
+  totalPagosRealizados: number;
+  saldoPendiente: number;
+  depositoADevolver: number;
+  deduccionesDeposito: number;
+  montoLiquidacion: number;
+  conceptos: ConceptoFiniquito[];
+  fechaGeneracion: string;
+  generadoPor?: string;
+}
+
+// Reporte Mensual
+export interface PropiedadMensual {
+  propiedadId: number;
+  direccion: string;
+  tipoPropiedad: string;
+  estadoOcupacion: string;
+  arrendatario?: string;
+  rentaMensual: number;
+  rentaCobrada: number;
+  saldoPendiente: number;
+  estadoPago: string;
+}
+
+export interface IngresoMensual {
+  fecha: string;
+  concepto: string;
+  propiedad: string;
+  cliente: string;
+  monto: number;
+  tipoPago: string;
+  referencia?: string;
+}
+
+export interface Moroso {
+  personaId: number;
+  nombre: string;
+  propiedad: string;
+  montoAdeudado: number;
+  diasVencido: number;
+  estadoCobranza: string;
+}
+
+export interface ReporteMensual {
+  empresaId: number;
+  nombreEmpresa: string;
+  mes: number;
+  anio: number;
+  periodoDescripcion: string;
+  fechaGeneracion: string;
+  totalPropiedades: number;
+  propiedadesOcupadas: number;
+  propiedadesDisponibles: number;
+  porcentajeOcupacion: number;
+  contratosActivos: number;
+  contratosPorVencer: number;
+  contratosVencidos: number;
+  contratosNuevos: number;
+  contratosTerminados: number;
+  contratosRenovados: number;
+  ingresosPorRenta: number;
+  ingresosPorOtrosConceptos: number;
+  totalIngresos: number;
+  rentaEsperada: number;
+  rentaCobrada: number;
+  porcentajeCobranza: number;
+  carteraVigente: number;
+  carteraVencida: number;
+  carteraTotal: number;
+  clientesConAdeudo: number;
+  clientesAlCorriente: number;
+  detallePropiedades: PropiedadMensual[];
+  detalleIngresos: IngresoMensual[];
+  topMorosos: Moroso[];
+}

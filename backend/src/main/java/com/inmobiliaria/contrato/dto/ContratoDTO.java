@@ -40,6 +40,7 @@ public class ContratoDTO {
     // Montos
     private BigDecimal montoRenta;
     private BigDecimal montoDeposito;
+    private BigDecimal montoFianza;
     private BigDecimal montoPenalidadDiaria;
     private Integer diasGracia;
     private BigDecimal porcentajeIncrementoAnual;
@@ -75,6 +76,7 @@ public class ContratoDTO {
                 .diaPago(contrato.getDiaPago())
                 .montoRenta(contrato.getMontoRenta())
                 .montoDeposito(contrato.getMontoDeposito())
+                .montoFianza(contrato.getMontoFianza())
                 .montoPenalidadDiaria(contrato.getMontoPenalidadDiaria())
                 .diasGracia(contrato.getDiasGracia())
                 .porcentajeIncrementoAnual(contrato.getPorcentajeIncrementoAnual())
